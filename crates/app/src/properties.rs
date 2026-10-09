@@ -11,8 +11,8 @@ impl App {
         let mut add_fill: Option<bool> = None;
         // Raised by the dock's `raise_controls`, so hover and press show.
         let chip = |ui: &mut egui::Ui, label: &str, tip: String| {
-            ui.add(egui::Button::new(RichText::new(label).size(12.0)).min_size(egui::vec2(64.0, 24.0)))
-                .on_hover_text(tip)
+            ui.add(egui::Button::new(RichText::new(tr(label)).size(12.0)).min_size(egui::vec2(64.0, 24.0)))
+                .on_hover_text(tr(tip))
                 .clicked()
         };
         ui.horizontal_wrapped(|ui| {
@@ -27,7 +27,10 @@ impl App {
                 if chip(
                     ui,
                     label,
-                    format!("New {name} adjustment layer above the active layer"),
+                    tr_args(
+                        "New {name} adjustment layer above the active layer",
+                        &[("name", tr(name))],
+                    ),
                 ) {
                     add_adj = adjustment_presets()
                         .into_iter()
@@ -54,7 +57,7 @@ impl App {
             }
             menu_custom_button(
                 ui,
-                egui::Button::new(RichText::new("More…").size(12.0).color(MUTED))
+                egui::Button::new(RichText::new(tr("More…")).size(12.0).color(MUTED))
                     .min_size(egui::vec2(64.0, 24.0)),
                 |ui| {
                     // Two columns keep this menu short enough to open below
@@ -121,7 +124,7 @@ impl App {
             } else {
                 "Select a layer to see its settings."
             };
-            ui.label(RichText::new(hint).color(MUTED));
+            ui.label(RichText::new(tr(hint)).color(MUTED));
             return;
         };
         let Some(layer) = self.editor.doc().layer(id) else {
@@ -134,13 +137,13 @@ impl App {
         let on_mask = self.editing_mask && layer.mask.is_some();
         ui.add_space(2.0);
         ui.horizontal(|ui| {
-            ui.label(RichText::new("PROPERTIES").small().strong().color(MUTED));
+            ui.label(RichText::new(tr("PROPERTIES")).small().strong().color(MUTED));
             ui.add_space(8.0);
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 ui.spacing_mut().item_spacing.x = 4.0;
                 if on_mask {
-                    ui.label(RichText::new("Mask").color(ACCENT));
-                    ui.label(RichText::new("›").color(MUTED));
+                    ui.label(RichText::new(tr("Mask")).color(ACCENT));
+                    ui.label(RichText::new(tr("›")).color(MUTED));
                 }
                 ui.add(egui::Label::new(RichText::new(&name).color(TEXT)).truncate());
             });
@@ -189,7 +192,7 @@ impl App {
         // out and say why, rather than refuse an edit after the fact.
         let locked = self.lock_block(crate::layer_actions::LockNeed::Props);
         if let Some(why) = locked {
-            ui.label(RichText::new(why).small().color(MUTED));
+            ui.label(RichText::new(tr(why)).small().color(MUTED));
         }
         let unlocked = locked.is_none();
         let finished = ui
@@ -270,13 +273,16 @@ impl App {
             section_title(ui, &adj.name().to_uppercase());
             self.adjustment_ui(ui, id, adj);
         } else if let Some(sh) = shape {
-            section_title(ui, &format!("SHAPE · {}", sh.geometry.name().to_uppercase()));
+            section_title(
+                ui,
+                &tr_args("SHAPE · {kind}", &[("kind", tr(sh.geometry.name()))]),
+            );
             self.shape_properties(ui, id, sh);
         } else if let Some(f) = fill {
             section_title(ui, &f.name().to_uppercase());
             self.fill_ui(ui, id, f);
         } else if let Some(mut f) = filt {
-            section_title(ui, &format!("{} · LIVE", f.name().to_uppercase()));
+            section_title(ui, &tr_args("{kind} · LIVE", &[("kind", tr(f.name()))]));
             let before = f.clone();
             let mut finished = false;
             match &mut f {
@@ -355,7 +361,7 @@ impl App {
                 self.editor.end_coalescing();
             }
             ui.label(
-                RichText::new("Applies to everything below; the pixels stay untouched.")
+                RichText::new(tr("Applies to everything below; the pixels stay untouched."))
                     .small()
                     .color(MUTED),
             );
@@ -368,31 +374,35 @@ impl App {
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         rasterize = ui
                             .add(
-                                egui::Button::new(RichText::new("Rasterize").small().color(MUTED))
+                                egui::Button::new(RichText::new(tr("Rasterize")).small().color(MUTED))
                                     .frame(false),
                             )
-                            .on_hover_text("Turn it into ordinary pixels (transforms resample from then on)")
+                            .on_hover_text(tr(
+                                "Turn it into ordinary pixels (transforms resample from then on)",
+                            ))
                             .clicked();
                     });
                 });
                 ui.label(
-                    RichText::new(
+                    RichText::new(tr(
                         "Scale and rotate as often as you like: it re-renders from the original pixels.",
-                    )
+                    ))
                     .small()
                     .color(MUTED),
                 );
                 ui.horizontal(|ui| {
                     if ui
-                        .button("Edit contents")
-                        .on_hover_text("Open the original pixels in a tab; Save there updates this layer")
+                        .button(tr("Edit contents"))
+                        .on_hover_text(tr(
+                            "Open the original pixels in a tab; Save there updates this layer",
+                        ))
                         .clicked()
                     {
                         contents = Some("smart-edit");
                     }
                     if ui
-                        .button("Replace contents…")
-                        .on_hover_text("Put another image in, keeping the transform")
+                        .button(tr("Replace contents…"))
+                        .on_hover_text(tr("Put another image in, keeping the transform"))
                         .clicked()
                     {
                         contents = Some("smart-replace");
@@ -410,7 +420,7 @@ impl App {
                 .is_some()
                 .then_some("Free Transform is open: set its values in the options bar"));
             if let Some(why) = locked {
-                ui.label(RichText::new(why).small().color(MUTED));
+                ui.label(RichText::new(tr(why)).small().color(MUTED));
             }
             ui.add_enabled_ui(locked.is_none(), |ui| {
                 slider_row(ui, "Scale", &mut self.xform_scale, 10.0..=400.0, "%");
@@ -425,32 +435,32 @@ impl App {
                     ui.spacing_mut().item_spacing = egui::vec2(6.0, 6.0);
                     if ui
                         .add_enabled(pending, primary_button("Apply"))
-                        .on_hover_text("Scale and rotate the layer about its centre")
-                        .on_disabled_hover_text("Set a scale or angle first")
+                        .on_hover_text(tr("Scale and rotate the layer about its centre"))
+                        .on_disabled_hover_text(tr("Set a scale or angle first"))
                         .clicked()
                     {
                         apply = true;
                     }
                     if ui
-                        .button("Flip H")
-                        .on_hover_text("Flip the layer horizontally")
+                        .button(tr("Flip H"))
+                        .on_hover_text(tr("Flip the layer horizontally"))
                         .clicked()
                     {
                         flip = Some(true);
                     }
                     if ui
-                        .button("Flip V")
-                        .on_hover_text("Flip the layer vertically")
+                        .button(tr("Flip V"))
+                        .on_hover_text(tr("Flip the layer vertically"))
                         .clicked()
                     {
                         flip = Some(false);
                     }
                     if ui
                         .add(
-                            egui::Button::new("Free transform…")
+                            egui::Button::new(tr("Free transform…"))
                                 .shortcut_text(self.action_keys(ui.ctx(), "xform")),
                         )
-                        .on_hover_text("Transform on the canvas with handles")
+                        .on_hover_text(tr("Transform on the canvas with handles"))
                         .clicked()
                     {
                         free = true;
@@ -531,7 +541,7 @@ impl App {
             "EFFECTS".to_string()
         };
         ui.add_space(4.0);
-        egui::CollapsingHeader::new(RichText::new(title).small().strong().color(MUTED))
+        egui::CollapsingHeader::new(RichText::new(tr(title)).small().strong().color(MUTED))
             .id_salt("layer-effects")
             .default_open(on > 0)
             .show(ui, |ui| self.effects_body(ui, id, fx))
@@ -556,7 +566,7 @@ impl App {
 
         ui.horizontal(|ui| {
             let mut on = fx.drop_shadow.is_some();
-            if check(ui, &mut on, "Drop shadow").changed() {
+            if check(ui, &mut on, tr("Drop shadow")).changed() {
                 fx.drop_shadow = on.then(ShadowFx::default);
                 changed = true;
                 finished = true;
@@ -601,7 +611,7 @@ impl App {
 
         ui.horizontal(|ui| {
             let mut on = fx.outer_glow.is_some();
-            if check(ui, &mut on, "Outer glow").changed() {
+            if check(ui, &mut on, tr("Outer glow")).changed() {
                 fx.outer_glow = on.then(GlowFx::default);
                 changed = true;
                 finished = true;
@@ -625,7 +635,7 @@ impl App {
 
         ui.horizontal(|ui| {
             let mut on = fx.inner_shadow.is_some();
-            if check(ui, &mut on, "Inner shadow").changed() {
+            if check(ui, &mut on, tr("Inner shadow")).changed() {
                 fx.inner_shadow = on.then(ShadowFx::default);
                 changed = true;
                 finished = true;
@@ -670,7 +680,7 @@ impl App {
 
         ui.horizontal(|ui| {
             let mut on = fx.inner_glow.is_some();
-            if check(ui, &mut on, "Inner glow").changed() {
+            if check(ui, &mut on, tr("Inner glow")).changed() {
                 fx.inner_glow = on.then(GlowFx::default);
                 changed = true;
                 finished = true;
@@ -694,7 +704,7 @@ impl App {
 
         ui.horizontal(|ui| {
             let mut on = fx.bevel.is_some();
-            if check(ui, &mut on, "Bevel").changed() {
+            if check(ui, &mut on, tr("Bevel")).changed() {
                 fx.bevel = on.then(lumenply_doc::BevelFx::default);
                 changed = true;
                 finished = true;
@@ -723,7 +733,7 @@ impl App {
 
         ui.horizontal(|ui| {
             let mut on = fx.color_overlay.is_some();
-            if check(ui, &mut on, "Color overlay").changed() {
+            if check(ui, &mut on, tr("Color overlay")).changed() {
                 fx.color_overlay = on.then(lumenply_doc::ColorOverlayFx::default);
                 changed = true;
                 finished = true;
@@ -745,7 +755,7 @@ impl App {
 
         ui.horizontal(|ui| {
             let mut on = fx.gradient_overlay.is_some();
-            if check(ui, &mut on, "Gradient overlay").changed() {
+            if check(ui, &mut on, tr("Gradient overlay")).changed() {
                 fx.gradient_overlay = on.then(lumenply_doc::GradientOverlayFx::default);
                 changed = true;
                 finished = true;
@@ -778,7 +788,7 @@ impl App {
 
         ui.horizontal(|ui| {
             let mut on = fx.stroke.is_some();
-            if check(ui, &mut on, "Stroke").changed() {
+            if check(ui, &mut on, tr("Stroke")).changed() {
                 fx.stroke = on.then(new_stroke_fx);
                 changed = true;
                 finished = true;
@@ -859,7 +869,7 @@ impl App {
         let mut finished = false;
         match adj {
             Adjustment::Invert => {
-                ui.label(RichText::new("This adjustment has no settings.").weak());
+                ui.label(RichText::new(tr("This adjustment has no settings.")).weak());
             }
             Adjustment::BrightnessContrast { brightness, contrast } => {
                 finished |= slider_row_scaled(ui, "Brightness", brightness, -1.0..=1.0, 100.0, "");
@@ -872,8 +882,10 @@ impl App {
                 colorize,
             } => {
                 if ui
-                    .checkbox(colorize, "Colorize")
-                    .on_hover_text("One hue and saturation for the whole image, keeping its lightness")
+                    .checkbox(colorize, tr("Colorize"))
+                    .on_hover_text(tr(
+                        "One hue and saturation for the whole image, keeping its lightness",
+                    ))
                     .changed()
                 {
                     // Photoshop's starting point for each mode.
@@ -999,7 +1011,7 @@ impl App {
                     "",
                     o.label_w,
                 );
-                if check(ui, preserve_luminosity, "Preserve luminosity").changed() {
+                if check(ui, preserve_luminosity, tr("Preserve luminosity")).changed() {
                     finished = true;
                 }
             }
@@ -1144,7 +1156,7 @@ pub(crate) fn curve_editor(ui: &mut egui::Ui, points: &mut Vec<[f32; 2]>, drag: 
     let (rect, resp) = ui.allocate_exact_size(size, Sense::click_and_drag());
     resp.widget_info(|| {
         let label = format!("Curve, {} points", points.len());
-        egui::WidgetInfo::labeled(egui::WidgetType::Other, true, label)
+        egui::WidgetInfo::labeled(egui::WidgetType::Other, true, tr(label))
     });
     let p = ui.painter_at(rect);
     p.rect_filled(rect, 4.0, GROUND);
@@ -1246,16 +1258,16 @@ pub(crate) fn curve_editor(ui: &mut egui::Ui, points: &mut Vec<[f32; 2]>, drag: 
     p.rect_stroke(rect, 4.0, Stroke::new(1.0, MUTED));
     ui.horizontal(|ui| {
         let mut preset = None;
-        if ui.small_button("Linear").clicked() {
+        if ui.small_button(tr("Linear")).clicked() {
             preset = Some(vec![[0.0, 0.0], [1.0, 1.0]]);
         }
-        if ui.small_button("Contrast").clicked() {
+        if ui.small_button(tr("Contrast")).clicked() {
             preset = Some(vec![[0.0, 0.0], [0.25, 0.15], [0.75, 0.85], [1.0, 1.0]]);
         }
-        if ui.small_button("Lighten").clicked() {
+        if ui.small_button(tr("Lighten")).clicked() {
             preset = Some(vec![[0.0, 0.0], [0.5, 0.65], [1.0, 1.0]]);
         }
-        if ui.small_button("Fade").clicked() {
+        if ui.small_button(tr("Fade")).clicked() {
             preset = Some(vec![[0.0, 0.12], [1.0, 0.9]]);
         }
         if let Some(pts) = preset {

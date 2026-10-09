@@ -193,7 +193,7 @@ impl App {
                     } else {
                         format!("Show the {name} channel alone · Cmd-click to load it as a selection")
                     };
-                    let resp = resp.on_hover_text(tip);
+                    let resp = resp.on_hover_text(tr(tip));
                     if resp.clicked() {
                         act = Some(match colour_channel(*v) {
                             Some(c) if mods.command => ChanAct::LoadColour(c, load_op(mods)),
@@ -204,7 +204,7 @@ impl App {
                 if alphas.is_empty() {
                     ui.add_space(6.0);
                     ui.label(
-                        RichText::new("Saved selections appear here as alpha channels.")
+                        RichText::new(tr("Saved selections appear here as alpha channels."))
                             .small()
                             .color(MUTED),
                     );
@@ -257,7 +257,7 @@ impl App {
                         "Click to view alone · Cmd-click to load as selection · double-click to rename"
                             .to_string()
                     };
-                    let resp = resp.on_hover_text(tip);
+                    let resp = resp.on_hover_text(tr(tip));
                     context_menu(&resp, |ui| {
                         if menu_item(ui, "View alone", "") {
                             act = Some(ChanAct::View(ChannelView::Alpha(i)));

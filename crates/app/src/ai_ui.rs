@@ -696,7 +696,7 @@ impl App {
             Background,
         }
         let mut act = None;
-        let shown = egui::Window::new(title)
+        let shown = egui::Window::new(tr(title))
             .id(egui::Id::new("ai-consent"))
             .collapsible(false)
             .resizable(false)
@@ -714,10 +714,7 @@ impl App {
                         ConsentPhase::Ask => {
                             crate::dialogs::note(
                                 ui,
-                                &format!(
-                                    "{feature} needs the {} model, which isn't installed yet.",
-                                    info.name
-                                ),
+                                &tr_args("{feature} needs the {name} model, which isn't installed yet.", &[("feature", tr(&feature)), ("name", info.name.to_string())]),
                             );
                             model_facts(ui, &info);
                             crate::dialogs::note(
@@ -738,34 +735,22 @@ impl App {
                         ConsentPhase::Downloading => {
                             let (done, total) = progress.unwrap_or((0, info.bytes));
                             let total = total.max(1);
-                            ui.label(RichText::new(format!("{} ({})", info.name, info.purpose)).color(TEXT));
+                            ui.label(RichText::new(format!("{} ({})", info.name, tr(&info.purpose))).color(TEXT));
                             let frac = done as f32 / total as f32;
                             progress_bar(ui, frac, 400.0, "Download progress");
                             ui.label(
-                                RichText::new(format!(
-                                    "{} of {}  ·  {:.0}%",
-                                    format_bytes(done),
-                                    format_bytes(total),
-                                    frac * 100.0
-                                ))
+                                RichText::new(tr_args("{0} of {1}  ·  {2}%", &[("0", format_bytes(done).to_string()), ("1", format_bytes(total).to_string()), ("2", format!("{:.0}", frac * 100.0))]))
                                 .monospace()
                                 .color(MUTED),
                             );
                             crate::dialogs::note(
                                 ui,
-                                &format!(
-                                    "From {}. {feature} runs as soon as it is installed. \
-                                     Your images stay on this computer.",
-                                    info.source
-                                ),
+                                &tr_args("From {source}. {feature} runs as soon as it is installed. Your images stay on this computer.", &[("source", info.source.to_string()), ("feature", tr(&feature))]),
                             );
                             crate::dialogs::footer(ui, |ui| {
                                 if ui
                                     .add(footer_button("Download in background"))
-                                    .on_hover_text(format!(
-                                        "Close this window and keep working; {feature} runs when the \
-                                         download is done. The progress shows above the canvas."
-                                    ))
+                                    .on_hover_text(tr_args("Close this window and keep working; {feature} runs when the download is done. The progress shows above the canvas.", &[("feature", feature.to_string())]))
                                     .clicked()
                                 {
                                     act = Some(Act::Background);
@@ -776,10 +761,10 @@ impl App {
                             });
                         }
                         ConsentPhase::Failed(why) => {
-                            ui.label(RichText::new(format!("{} wasn't installed.", info.name)).color(TEXT));
-                            let msg = ui.add(egui::Label::new(RichText::new(why).color(DANGER)).wrap());
+                            ui.label(RichText::new(tr_args("{name} wasn't installed.", &[("name", info.name.to_string())])).color(TEXT));
+                            let msg = ui.add(egui::Label::new(RichText::new(tr(why)).color(DANGER)).wrap());
                             if let Some(d) = &detail {
-                                msg.on_hover_text(d);
+                                msg.on_hover_text(tr(d));
                             }
                             crate::dialogs::note(
                                 ui,
@@ -877,17 +862,23 @@ impl App {
                         if let Some((text, waiting, secs)) = &infer {
                             ui.horizontal(|ui| {
                                 ui.add(egui::Spinner::new().size(16.0).color(ACCENT));
-                                ui.label(RichText::new(text).color(TEXT));
+                                ui.label(RichText::new(tr(text)).color(TEXT));
                                 // A long wait shows that time is passing.
                                 if *secs >= 2 {
                                     ui.label(RichText::new(format!("{secs} s")).monospace().color(MUTED));
                                 }
                                 if *waiting > 0 {
-                                    ui.label(RichText::new(format!("+{waiting} waiting")).color(MUTED));
+                                    ui.label(
+                                        RichText::new(tr_args(
+                                            "+{waiting} waiting",
+                                            &[("waiting", waiting.to_string())],
+                                        ))
+                                        .color(MUTED),
+                                    );
                                 }
                                 if ui
                                     .add(footer_button("Cancel"))
-                                    .on_hover_text("Stop and drop the result")
+                                    .on_hover_text(tr("Stop and drop the result"))
                                     .clicked()
                                 {
                                     cancel_infer = true;
@@ -896,7 +887,13 @@ impl App {
                         }
                         for (model, name, frac) in &downloads {
                             ui.horizontal(|ui| {
-                                ui.label(RichText::new(format!("Downloading {name}")).color(TEXT));
+                                ui.label(
+                                    RichText::new(tr_args(
+                                        "Downloading {name}",
+                                        &[("name", name.to_string())],
+                                    ))
+                                    .color(TEXT),
+                                );
                                 progress_bar(ui, *frac, 160.0, &format!("{name} download progress"));
                                 ui.label(
                                     RichText::new(format!("{:3.0}%", frac * 100.0))
@@ -973,32 +970,36 @@ impl App {
                                 } else {
                                     ("Not installed", MUTED)
                                 };
-                                ui.label(RichText::new(state).small().color(ink));
+                                ui.label(RichText::new(tr(state)).small().color(ink));
                             });
-                            ui.label(RichText::new(&m.purpose).color(MUTED));
+                            ui.label(RichText::new(tr(&m.purpose)).color(MUTED));
                             ui.add(
                                 egui::Label::new(
-                                    RichText::new(format!(
-                                        "{}  ·  {} licence",
-                                        format_bytes(m.bytes),
-                                        m.licence
+                                    RichText::new(tr_args(
+                                        "{0}  ·  {1} licence",
+                                        &[
+                                            ("0", format_bytes(m.bytes).to_string()),
+                                            ("1", m.licence.to_string()),
+                                        ],
                                     ))
                                     .color(MUTED),
                                 )
                                 .wrap(),
                             );
                             ui.add(
-                                egui::Label::new(RichText::new(&m.source).small().color(MUTED)).truncate(),
+                                egui::Label::new(RichText::new(tr(&m.source)).small().color(MUTED))
+                                    .truncate(),
                             )
-                            .on_hover_text(format!("Downloaded from {}", m.source));
+                            .on_hover_text(tr_args("Downloaded from {0}", &[("0", m.source.to_string())]));
                             if m.key == ModelKey::BiRefNetLite {
                                 ui.add_space(4.0);
                                 let mut high = self.prefs.ai_high_detail;
-                                let r = check(ui, &mut high, "High detail for hair and fur").on_hover_text(
-                                    "Runs the model at 1024 × 1024 instead of 768 × 768: finer edges, \
+                                let r = check(ui, &mut high, tr("High detail for hair and fur"))
+                                    .on_hover_text(tr(
+                                        "Runs the model at 1024 × 1024 instead of 768 × 768: finer edges, \
                                      about twice as slow, and a run needs about 5 GB of free memory \
                                      instead of 3 GB",
-                                );
+                                    ));
                                 if r.changed() {
                                     detail = Some(high);
                                 }
@@ -1021,8 +1022,11 @@ impl App {
                             } else if m.installed {
                                 let r = ui
                                     .add_enabled(!busy, footer_button("Remove"))
-                                    .on_hover_text(format!("Delete {} from this computer", m.name))
-                                    .on_disabled_hover_text("Wait for the running job to finish");
+                                    .on_hover_text(tr_args(
+                                        "Delete {name} from this computer",
+                                        &[("name", m.name.to_string())],
+                                    ))
+                                    .on_disabled_hover_text(tr("Wait for the running job to finish"));
                                 // Two rows have a Remove: say which.
                                 a11y_name(&r, &format!("Remove {}", m.name));
                                 if r.clicked() {
@@ -1031,12 +1035,14 @@ impl App {
                             } else {
                                 let r = ui
                                     .add_enabled(unavailable.is_none(), footer_button("Download"))
-                                    .on_hover_text(format!(
-                                        "Download {} from {}",
-                                        format_bytes(m.bytes),
-                                        m.source
+                                    .on_hover_text(tr_args(
+                                        "Download {0} from {1}",
+                                        &[
+                                            ("0", format_bytes(m.bytes).to_string()),
+                                            ("1", m.source.to_string()),
+                                        ],
                                     ))
-                                    .on_disabled_hover_text(unavailable.clone().unwrap_or_default());
+                                    .on_disabled_hover_text(tr(unavailable.clone().unwrap_or_default()));
                                 a11y_name(&r, &format!("Download {}", m.name));
                                 if r.clicked() {
                                     download = Some(m.key);
@@ -1050,8 +1056,8 @@ impl App {
         ui.horizontal(|ui| {
             row_label(ui, "Runs on", LABEL_W);
             match &unavailable {
-                Some(why) => ui.label(RichText::new(why).color(MUTED)),
-                None => ui.label(RichText::new(self.ai.service.provider()).color(TEXT)),
+                Some(why) => ui.label(RichText::new(tr(why)).color(MUTED)),
+                None => ui.label(RichText::new(tr(self.ai.service.provider())).color(TEXT)),
             };
         });
         if let Some(dir) = session::data_dir() {
@@ -1173,8 +1179,9 @@ impl App {
         self.ai_warm_select();
         crate::options_bar::select_ops(ui, &mut self.select_op);
         ui.separator();
-        check(ui, &mut self.sample_merged, "All layers")
-            .on_hover_text("Find objects in the merged image instead of the active layer only");
+        check(ui, &mut self.sample_merged, tr("All layers")).on_hover_text(tr(
+            "Find objects in the merged image instead of the active layer only",
+        ));
         ui.separator();
         let running = self
             .ai
@@ -1183,32 +1190,40 @@ impl App {
             .filter(|r| matches!(r.task, AiTask::Object { .. }) && !r.job.cancelled())
             .map(|r| r.task.doing_short(r.job.progress.phase()));
         if let Some(why) = self.ai.service.unavailable() {
-            ui.label(RichText::new("AI not available").color(MUTED))
-                .on_hover_text(why);
+            ui.label(RichText::new(tr("AI not available")).color(MUTED))
+                .on_hover_text(tr(why));
         } else if let Some(doing) = running {
             ui.add(egui::Spinner::new().size(14.0).color(ACCENT));
-            ui.label(RichText::new(doing).color(TEXT));
+            ui.label(RichText::new(tr(doing)).color(TEXT));
         } else if let Some(frac) = self
             .ai
             .downloading(ModelKey::MobileSam)
             .map(|j| j.progress.fraction())
         {
             ui.add(egui::Spinner::new().size(14.0).color(ACCENT));
-            ui.label(RichText::new(format!("Downloading the model… {:.0}%", frac * 100.0)).color(TEXT));
+            ui.label(
+                RichText::new(tr_args(
+                    "Downloading the model… {0}%",
+                    &[("0", format!("{:.0}", frac * 100.0))],
+                ))
+                .color(TEXT),
+            );
         } else if !self.ai.installed(ModelKey::MobileSam) {
             let info = self.ai.info(ModelKey::MobileSam);
             let label = if tight {
                 "Get model…".to_string()
             } else {
-                format!("Get the model ({})…", format_bytes(info.bytes))
+                tr_args("Get the model ({size})…", &[("size", format_bytes(info.bytes))])
             };
             if ui
-                .add(egui::Button::new(label))
-                .on_hover_text(format!(
-                    "Object Selection needs {} ({}, {} licence); it runs on this computer",
-                    info.name,
-                    format_bytes(info.bytes),
-                    info.licence
+                .add(egui::Button::new(tr(label)))
+                .on_hover_text(tr_args(
+                    "Object Selection needs {name} ({size}, {licence} licence); it runs on this computer",
+                    &[
+                        ("name", info.name.to_string()),
+                        ("size", format_bytes(info.bytes)),
+                        ("licence", info.licence.to_string()),
+                    ],
                 ))
                 .clicked()
                 && self.ai.consent.is_none()
@@ -1217,7 +1232,10 @@ impl App {
             }
         } else if !tight {
             ui.label(
-                RichText::new("Click an object or drag a box around it · Shift adds, Alt subtracts").weak(),
+                RichText::new(tr(
+                    "Click an object or drag a box around it · Shift adds, Alt subtracts",
+                ))
+                .weak(),
             );
         }
     }
@@ -1374,7 +1392,7 @@ fn model_facts(ui: &mut egui::Ui, info: &ModelInfoView) {
     let fact = |ui: &mut egui::Ui, label: &str, value: String| {
         ui.horizontal(|ui| {
             row_label(ui, label, LABEL_W);
-            ui.add(egui::Label::new(RichText::new(value).color(TEXT)).wrap());
+            ui.add(egui::Label::new(RichText::new(tr(value)).color(TEXT)).wrap());
         });
     };
     ui.spacing_mut().item_spacing.y = 4.0;

@@ -69,8 +69,8 @@ pub(crate) fn toggle(ui: &mut egui::Ui, on: &mut bool, name: &str) -> bool {
     p.line_segment([tip, back - half], s);
     p.line_segment([back + half, back - half], s);
     p.line_segment([tip + egui::vec2(3.0, 3.5), tip + egui::vec2(8.0, 3.5)], s);
-    resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Checkbox, true, *on, name));
-    let clicked = resp.on_hover_text(name).clicked();
+    resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Checkbox, true, *on, tr(name)));
+    let clicked = resp.on_hover_text(tr(name)).clicked();
     if clicked {
         *on = !*on;
     }

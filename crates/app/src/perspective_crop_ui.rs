@@ -344,20 +344,23 @@ impl App {
                 58.0,
             );
             a11y_name(&r, name);
-            r.on_hover_text(format!("{name} of the result in px (0 = from the frame's edges)"))
-                .changed()
+            r.on_hover_text(tr_args(
+                "{name} of the result in px (0 = from the frame's edges)",
+                &[("name", tr(name))],
+            ))
+            .changed()
         };
-        ui.label(RichText::new("W").color(MUTED));
+        ui.label(RichText::new(tr("W")).color(MUTED));
         let cw = field(ui, &mut w, "Width", natural.map(|n| n.0));
-        ui.label(RichText::new("H").color(MUTED));
+        ui.label(RichText::new(tr("H")).color(MUTED));
         let ch = field(ui, &mut h, "Height", natural.map(|n| n.1));
         if cw || ch {
             self.crop.persp.size = (w, h);
         }
         if self.crop.persp.size != (0, 0)
             && ui
-                .small_button("Auto")
-                .on_hover_text("Size the result from the frame's edges")
+                .small_button(tr("Auto"))
+                .on_hover_text(tr("Size the result from the frame's edges"))
                 .clicked()
         {
             self.crop.persp.size = (0, 0);
@@ -365,8 +368,15 @@ impl App {
         let tight = tier == options_bar::Tier::Tight;
         if let (Some((ow, oh)), false) = (self.crop.persp.out_size(), tight) {
             ui.separator();
-            ui.label(RichText::new(format!("{ow} × {oh} px")).monospace().color(TEXT))
-                .on_hover_text("Size of the rectified canvas");
+            ui.label(
+                RichText::new(tr_args(
+                    "{ow} × {oh} px",
+                    &[("ow", ow.to_string()), ("oh", oh.to_string())],
+                ))
+                .monospace()
+                .color(TEXT),
+            )
+            .on_hover_text(tr("Size of the rectified canvas"));
         }
         let raster = PerspectiveCrop::rasterized_layers(self.editor.doc()).len();
         if raster > 0 {
@@ -376,17 +386,14 @@ impl App {
             } else {
                 format!("rasterizes {raster} {layers}")
             };
-            ui.label(RichText::new(text).color(ACCENT)).on_hover_text(format!(
-                "{raster} text, shape or smart-object layer(s) cannot follow a perspective \
-                 change; the crop turns them into pixels (one undo step)"
-            ));
+            ui.label(RichText::new(tr(text)).color(ACCENT)).on_hover_text(tr_args("{raster} text, shape or smart-object layer(s) cannot follow a perspective change; the crop turns them into pixels (one undo step)", &[("raster", raster.to_string())]));
         } else if tier == options_bar::Tier::Wide && self.crop.persp.quad.is_some() {
-            ui.label(RichText::new("Drag corners onto edges that should be straight").weak());
+            ui.label(RichText::new(tr("Drag corners onto edges that should be straight")).weak());
         }
         ui.separator();
         if ui
             .add(footer_button("Cancel").shortcut_text("Esc"))
-            .on_hover_text("Clear the frame (Esc)")
+            .on_hover_text(tr("Clear the frame (Esc)"))
             .clicked()
         {
             self.cancel_pcrop();
@@ -395,12 +402,12 @@ impl App {
         let r = ui.add_enabled(
             ready,
             primary_button("Crop")
-                .shortcut_text(RichText::new("Enter").color(ACCENT_INK.gamma_multiply(0.7))),
+                .shortcut_text(RichText::new(tr("Enter")).color(ACCENT_INK.gamma_multiply(0.7))),
         );
         // Not just "Crop": the tool on the rail has that name.
         a11y_name(&r, "Crop to frame");
-        if r.on_hover_text("Rectify and crop to the frame (Enter)")
-            .on_disabled_hover_text("Drag a frame over the image first")
+        if r.on_hover_text(tr("Rectify and crop to the frame (Enter)"))
+            .on_disabled_hover_text(tr("Drag a frame over the image first"))
             .clicked()
         {
             self.commit_pcrop();

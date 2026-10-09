@@ -120,10 +120,10 @@ pub(crate) fn develop_params(ui: &mut egui::Ui, d: &Develop) {
     } else {
         parts.join(" · ")
     };
-    ui.label(RichText::new(text).small().color(MUTED));
+    ui.label(RichText::new(tr(text)).small().color(MUTED));
     if ui
-        .button("Edit in Camera Raw…")
-        .on_hover_text("Open the Camera Raw workspace with these settings")
+        .button(tr("Edit in Camera Raw…"))
+        .on_hover_text(tr("Open the Camera Raw workspace with these settings"))
         .clicked()
     {
         ui.ctx().data_mut(|m| m.insert_temp(request_key(), true));
@@ -141,11 +141,15 @@ pub(crate) fn apply_as_row(ui: &mut egui::Ui, t: &mut CrfTarget) {
     ui.add_space(4.0);
     match t.edit {
         CrfEdit::SmartFilter(_) => {
-            ui.label(RichText::new("OK updates the smart filter").small().color(MUTED));
+            ui.label(
+                RichText::new(tr("OK updates the smart filter"))
+                    .small()
+                    .color(MUTED),
+            );
         }
         CrfEdit::LiveLayer => {
             ui.label(
-                RichText::new("OK updates the live filter layer")
+                RichText::new(tr("OK updates the live filter layer"))
                     .small()
                     .color(MUTED),
             );
@@ -156,18 +160,18 @@ pub(crate) fn apply_as_row(ui: &mut egui::Ui, t: &mut CrfTarget) {
                     ui.spacing_mut().combo_width = 150.0;
                     let mut pick = t.apply;
                     let r = egui::ComboBox::from_id_salt("camera-raw-filter-apply")
-                        .selected_text(pick.title())
+                        .selected_text(tr(pick.title()))
                         .show_ui(ui, |ui| {
                             popup_style(ui);
                             for c in &t.choices {
-                                ui.selectable_value(&mut pick, *c, c.title())
-                                    .on_hover_text(c.hint());
+                                ui.selectable_value(&mut pick, *c, tr(c.title()))
+                                    .on_hover_text(tr(c.hint()));
                             }
                         });
                     a11y_name(&r.response, "Apply the Camera Raw Filter as");
-                    r.response.on_hover_text(pick.hint());
+                    r.response.on_hover_text(tr(pick.hint()));
                     t.apply = pick;
-                    ui.label(RichText::new("Apply as").color(MUTED));
+                    ui.label(RichText::new(tr("Apply as")).color(MUTED));
                 });
             });
         }

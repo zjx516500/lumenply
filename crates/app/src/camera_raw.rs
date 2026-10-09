@@ -201,9 +201,16 @@ impl App {
             .exact_height(40.0)
             .show(ctx, |ui| {
                 ui.horizontal_centered(|ui| {
-                    ui.label(RichText::new(title).strong().color(TEXT));
+                    ui.label(RichText::new(tr(title)).strong().color(TEXT));
                     ui.label(RichText::new(&name).color(MUTED));
-                    ui.label(RichText::new(format!("{fw} × {fh} px")).monospace().color(MUTED));
+                    ui.label(
+                        RichText::new(tr_args(
+                            "{fw} × {fh} px",
+                            &[("fw", fw.to_string()), ("fh", fh.to_string())],
+                        ))
+                        .monospace()
+                        .color(MUTED),
+                    );
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         ui.label(RichText::new(enter).color(MUTED));
                     });
@@ -246,8 +253,8 @@ impl App {
                 ui.add_space(8.0);
                 ui.horizontal(|ui| {
                     if ui
-                        .button("Auto")
-                        .on_hover_text("Set exposure, whites and blacks from the image")
+                        .button(tr("Auto"))
+                        .on_hover_text(tr("Set exposure, whites and blacks from the image"))
                         .clicked()
                     {
                         let a = auto_develop(&st.proxy);
@@ -265,12 +272,12 @@ impl App {
                         };
                     }
                     if ui
-                        .button("Reset")
-                        .on_hover_text(if st.filter.is_some() {
+                        .button(tr("Reset"))
+                        .on_hover_text(tr(if st.filter.is_some() {
                             "Back to the layer as it is"
                         } else {
                             "Back to the camera's rendering"
-                        })
+                        }))
                         .clicked()
                     {
                         st.dev = if st.filter.is_some() {
@@ -279,7 +286,7 @@ impl App {
                             Develop::default()
                         };
                     }
-                    check(ui, &mut st.before, "Before (P)");
+                    check(ui, &mut st.before, tr("Before (P)"));
                 });
                 ui.add_space(6.0);
                 let scroll = egui::ScrollArea::vertical()
@@ -302,8 +309,8 @@ impl App {
                         basic_row(ui, "Shadows", &mut d.shadows, -100.0..=100.0, "");
                         basic_row(ui, "Whites", &mut d.whites, -100.0..=100.0, "");
                         basic_row(ui, "Blacks", &mut d.blacks, -100.0..=100.0, "");
-                        check(ui, &mut d.tone_curve, "Camera tone curve")
-                            .on_hover_text("The gentle contrast curve raw converters apply by default");
+                        check(ui, &mut d.tone_curve, tr("Camera tone curve"))
+                            .on_hover_text(tr("The gentle contrast curve raw converters apply by default"));
                         section_title(ui, "PRESENCE");
                         basic_row(ui, "Texture", &mut d.texture, -100.0..=100.0, "");
                         basic_row(ui, "Clarity", &mut d.clarity, -100.0..=100.0, "");
@@ -354,7 +361,7 @@ impl App {
                     ui.painter().text(
                         img.left_top() + egui::vec2(10.0, 10.0),
                         Align2::LEFT_TOP,
-                        "Before",
+                        tr("Before"),
                         FontId::proportional(13.0),
                         TEXT,
                     );

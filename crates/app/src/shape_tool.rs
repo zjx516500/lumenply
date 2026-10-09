@@ -97,7 +97,7 @@ fn bar_value(
     }
     ui.scope(|ui| {
         ui.spacing_mut().item_spacing.x = 6.0;
-        ui.label(RichText::new(label).color(MUTED));
+        ui.label(RichText::new(tr(label)).color(MUTED));
         let span = range.end() - range.start();
         let r = num_field(
             ui,
@@ -339,7 +339,7 @@ impl App {
     pub(crate) fn shape_options_bar(&mut self, ui: &mut egui::Ui, tier: Tier) {
         let st = &mut self.shape;
         let r = egui::ComboBox::from_id_salt("shape-kind")
-            .selected_text(kind_label(&st.params))
+            .selected_text(tr(kind_label(&st.params)))
             .width(if tier == Tier::Wide { 150.0 } else { 120.0 })
             // Tall enough for every kind: egui's default cuts the list
             // after seven rows and hides the last custom shapes.
@@ -351,7 +351,7 @@ impl App {
                         ui.separator();
                     }
                     let on = st.params.kind == k && (k != ShapeKind::Custom || st.params.custom == c);
-                    if ui.selectable_label(on, label).clicked() {
+                    if ui.selectable_label(on, tr(label)).clicked() {
                         st.params.kind = k;
                         st.params.custom = c;
                     }
@@ -359,7 +359,7 @@ impl App {
             })
             .response;
         a11y_name(&r, "Shape kind");
-        r.on_hover_text("Which shape a drag draws");
+        r.on_hover_text(tr("Which shape a drag draws"));
         match st.params.kind {
             ShapeKind::RoundedRectangle => {
                 bar_value(
@@ -388,37 +388,38 @@ impl App {
                     " px",
                     true,
                 );
-                check(ui, &mut st.params.arrow_start, "Start").on_hover_text("Arrowhead at the start");
-                check(ui, &mut st.params.arrow_end, "End").on_hover_text("Arrowhead at the end");
+                check(ui, &mut st.params.arrow_start, tr("Start"))
+                    .on_hover_text(tr("Arrowhead at the start"));
+                check(ui, &mut st.params.arrow_end, tr("End")).on_hover_text(tr("Arrowhead at the end"));
             }
             _ => {}
         }
         ui.separator();
-        ui.label(RichText::new("Fill").color(MUTED));
+        ui.label(RichText::new(tr("Fill")).color(MUTED));
         let r = egui::ComboBox::from_id_salt("shape-fill")
-            .selected_text(match st.fill {
+            .selected_text(tr(match st.fill {
                 FillMode::None => "None",
                 FillMode::Solid => "Solid",
                 FillMode::Gradient => "Gradient",
                 FillMode::Pattern => "Pattern",
-            })
+            }))
             .width(84.0)
             .show_ui(ui, |ui| {
                 popup_style(ui);
-                ui.selectable_value(&mut st.fill, FillMode::None, "None");
-                ui.selectable_value(&mut st.fill, FillMode::Solid, "Solid");
-                ui.selectable_value(&mut st.fill, FillMode::Gradient, "Gradient");
-                ui.selectable_value(&mut st.fill, FillMode::Pattern, "Pattern");
+                ui.selectable_value(&mut st.fill, FillMode::None, tr("None"));
+                ui.selectable_value(&mut st.fill, FillMode::Solid, tr("Solid"));
+                ui.selectable_value(&mut st.fill, FillMode::Gradient, tr("Gradient"));
+                ui.selectable_value(&mut st.fill, FillMode::Pattern, tr("Pattern"));
             })
             .response;
         a11y_name(&r, "Shape fill");
-        r.on_hover_text("Gradients run from the fill colour to the background colour");
+        r.on_hover_text(tr("Gradients run from the fill colour to the background colour"));
         if st.fill != FillMode::None {
             let r = crate::color_picker::color_edit_button_rgb(ui, &mut st.fill_rgb);
             colour_name(&r, "Fill colour", st.fill_rgb);
         }
         ui.separator();
-        check(ui, &mut st.stroke_on, "Stroke").on_hover_text("Outline the shape");
+        check(ui, &mut st.stroke_on, tr("Stroke")).on_hover_text(tr("Outline the shape"));
         if st.stroke_on {
             let r = crate::color_picker::color_edit_button_rgb(ui, &mut st.stroke_rgb);
             colour_name(&r, "Stroke colour", st.stroke_rgb);
@@ -427,17 +428,17 @@ impl App {
         // A tight bar leaves the alignment to Properties.
         if st.stroke_on && tier != Tier::Tight {
             let r = egui::ComboBox::from_id_salt("shape-align")
-                .selected_text(st.align.name())
+                .selected_text(tr(st.align.name()))
                 .width(72.0)
                 .show_ui(ui, |ui| {
                     popup_style(ui);
                     for a in StrokeAlign::ALL {
-                        ui.selectable_value(&mut st.align, a, a.name());
+                        ui.selectable_value(&mut st.align, a, tr(a.name()));
                     }
                 })
                 .response;
             a11y_name(&r, "Stroke alignment");
-            r.on_hover_text("Where the stroke sits on the outline");
+            r.on_hover_text(tr("Where the stroke sits on the outline"));
         }
         crate::options_bar::hint_label(ui, tier, Tool::Shape);
     }
@@ -516,7 +517,7 @@ impl App {
                 ui.horizontal(|ui| {
                     row_label(ui, "Style", LABEL_W);
                     let r = egui::ComboBox::from_id_salt(("shape-grad-style", id))
-                        .selected_text(style.name())
+                        .selected_text(tr(style.name()))
                         .show_ui(ui, |ui| {
                             popup_style(ui);
                             for s in GradientStyle::ALL {
@@ -530,7 +531,7 @@ impl App {
                     a11y_name(&r, "Gradient style");
                 });
                 finished |= slider_row(ui, "Angle", angle, -180.0..=180.0, "°");
-                if check(ui, reverse, "Reverse").changed() {
+                if check(ui, reverse, tr("Reverse")).changed() {
                     finished = true;
                 }
             }
@@ -543,7 +544,7 @@ impl App {
         // Stroke.
         ui.add_space(4.0);
         let mut on = shape.stroke.is_some();
-        if check(ui, &mut on, "Stroke").changed() {
+        if check(ui, &mut on, tr("Stroke")).changed() {
             shape.stroke = on.then(|| ShapeStroke {
                 color: lin(self.shape.stroke_rgb),
                 width: self.shape.stroke_width,
@@ -570,8 +571,8 @@ impl App {
                 }
             });
             let mut dashed = s.dash.is_some();
-            if check(ui, &mut dashed, "Dashed")
-                .on_hover_text("Dashes and gaps twice the width")
+            if check(ui, &mut dashed, tr("Dashed"))
+                .on_hover_text(tr("Dashes and gaps twice the width"))
                 .changed()
             {
                 s.dash = dashed.then_some([2.0, 2.0]);
@@ -604,15 +605,15 @@ impl App {
                 finished |= slider_row_log(ui, "Weight", weight, 0.5..=200.0, " px");
                 ui.horizontal(|ui| {
                     row_label(ui, "Arrows", LABEL_W);
-                    finished |= check(ui, arrow_start, "Start").changed();
-                    finished |= check(ui, arrow_end, "End").changed();
+                    finished |= check(ui, arrow_start, tr("Start")).changed();
+                    finished |= check(ui, arrow_end, tr("End")).changed();
                 });
             }
             ShapeGeometry::Custom { shape: c, .. } => {
                 ui.horizontal(|ui| {
                     row_label(ui, "Shape", LABEL_W);
                     let r = egui::ComboBox::from_id_salt(("shape-custom", id))
-                        .selected_text(c.name())
+                        .selected_text(tr(c.name()))
                         .show_ui(ui, |ui| {
                             popup_style(ui);
                             for s in CustomShape::ALL {
@@ -636,22 +637,22 @@ impl App {
         }
         ui.horizontal(|ui| {
             if ui
-                .small_button("Make work path")
+                .small_button(tr("Make work path"))
                 .on_hover_text("Copy the outline to the pen's work path")
                 .clicked()
             {
                 self.run(&ShapeToWorkPath { layer: id });
             }
             if ui
-                .small_button("Rasterize")
-                .on_hover_text("Turn the shape into ordinary pixels")
+                .small_button(tr("Rasterize"))
+                .on_hover_text(tr("Turn the shape into ordinary pixels"))
                 .clicked()
             {
                 self.run(&RasterizeLayer { layer: id });
             }
         });
         ui.label(
-            RichText::new("Stays vector: transforms redraw it crisply.")
+            RichText::new(tr("Stays vector: transforms redraw it crisply."))
                 .small()
                 .color(MUTED),
         );

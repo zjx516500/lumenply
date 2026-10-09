@@ -258,7 +258,7 @@ impl App {
         resp.widget_info(|| {
             egui::WidgetInfo::selected(egui::WidgetType::SelectableLabel, true, active, tool.name())
         });
-        if resp.on_hover_text(tool.tip()).clicked() {
+        if resp.on_hover_text(tr(tool.tip())).clicked() {
             self.tool = tool;
             self.lasso.clear();
             self.pen_open = false;
@@ -279,7 +279,7 @@ impl App {
         // Swap, in the free top-right corner.
         let swap_rect = egui::Rect::from_min_size(rect.min + egui::vec2(28.0, 0.0), Vec2::splat(12.0));
         let swap = ui.interact(swap_rect, ui.id().with("swap-colors"), Sense::click());
-        swap.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "Swap colours"));
+        swap.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, tr("Swap colours")));
         {
             let p = ui.painter();
             let st = Stroke::new(1.3, if swap.hovered() { TEXT } else { MUTED });
@@ -289,13 +289,14 @@ impl App {
             p.line_segment([c + egui::vec2(5.0, 2.0), c + egui::vec2(2.0, 5.0)], st);
             p.line_segment([c + egui::vec2(-5.0, -2.0), c + egui::vec2(-2.0, -5.0)], st);
         }
-        if swap.on_hover_text("Swap colours (X)").clicked() {
+        if swap.on_hover_text(tr("Swap colours (X)")).clicked() {
             std::mem::swap(&mut self.brush_rgb, &mut self.bg_rgb);
         }
         // Reset to black over white, in the free bottom-left corner.
         let reset_rect = egui::Rect::from_min_size(rect.min + egui::vec2(0.0, 32.0), Vec2::splat(12.0));
         let reset = ui.interact(reset_rect, ui.id().with("reset-colors"), Sense::click());
-        reset.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "Default colours"));
+        reset
+            .widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, tr("Default colours")));
         {
             let p = ui.painter();
             let a = egui::Rect::from_min_size(reset_rect.min, Vec2::splat(7.0));
@@ -306,7 +307,7 @@ impl App {
             p.rect_filled(a, 1.5, Color32::BLACK);
             p.rect_stroke(a, 1.5, edge);
         }
-        if reset.on_hover_text("Default colours (D)").clicked() {
+        if reset.on_hover_text(tr("Default colours (D)")).clicked() {
             self.brush_rgb = [0.0; 3];
             self.bg_rgb = [1.0; 3];
         }
@@ -329,8 +330,8 @@ impl App {
         let fg_resp = ui.interact(fg_rect, ui.id().with("fg-well"), Sense::click());
         let fg_label = format!("Foreground colour {}", color_picker::format_hex(self.brush_rgb));
         let bg_label = format!("Background colour {}", color_picker::format_hex(self.bg_rgb));
-        fg_resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::ColorButton, true, &fg_label));
-        bg_resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::ColorButton, true, &bg_label));
+        fg_resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::ColorButton, true, tr(&fg_label)));
+        bg_resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::ColorButton, true, tr(&bg_label)));
         let p = ui.painter();
         p.rect_filled(bg_rect, 4.0, color_picker::to_color32(self.bg_rgb));
         p.rect_stroke(bg_rect, 4.0, edge(bg_open, bg_resp.hovered()));
@@ -341,8 +342,8 @@ impl App {
         let at = egui::pos2(ui.max_rect().right() + 17.0, rect.bottom());
         let tip =
             |what: &str, rgb: [f32; 3]| format!("{what} {}  ·  click to edit", color_picker::format_hex(rgb));
-        let fg_resp = fg_resp.on_hover_text(tip("Foreground", self.brush_rgb));
-        let bg_resp = bg_resp.on_hover_text(tip("Background", self.bg_rgb));
+        let fg_resp = fg_resp.on_hover_text(tr(tip("Foreground", self.brush_rgb)));
+        let bg_resp = bg_resp.on_hover_text(tr(tip("Background", self.bg_rgb)));
         let place = || color_picker::Placement::At(at, Align2::LEFT_BOTTOM);
         color_picker::picker_popup(
             ui,

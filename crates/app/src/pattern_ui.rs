@@ -206,10 +206,10 @@ impl App {
             let name = display_name(&current.name).to_string();
             let resp = match &tex {
                 Some(t) => ui.add(egui::ImageButton::new((t.id(), Vec2::splat(22.0)))),
-                None => ui.button("?"),
+                None => ui.button(tr("?")),
             };
             a11y_name(&resp, &format!("Choose pattern (now {name})"));
-            let resp = resp.on_hover_text("Choose a pattern");
+            let resp = resp.on_hover_text(tr("Choose a pattern"));
             if resp.clicked() {
                 self.open_pattern_picker(target, Some(resp.rect.left_bottom()));
             }
@@ -241,7 +241,7 @@ impl App {
         finished |= slider_row(ui, "Offset Y", &mut offset[1], -512.0..=512.0, " px");
         ui.horizontal(|ui| {
             row_label(ui, "", LABEL_W);
-            if ui.button("Snap to origin").clicked() {
+            if ui.button(tr("Snap to origin")).clicked() {
                 *offset = [0.0, 0.0];
                 finished = true;
             }
@@ -259,7 +259,7 @@ impl App {
     ) -> (bool, bool) {
         let (mut changed, mut finished) = (false, false);
         let mut on = po.is_some();
-        if check(ui, &mut on, "Pattern overlay").changed() {
+        if check(ui, &mut on, tr("Pattern overlay")).changed() {
             *po = on.then(|| {
                 let p = self
                     .editor
@@ -280,7 +280,7 @@ impl App {
             finished |= slider_row_scaled(ui, "Opacity", &mut fx.opacity, 0.0..=1.0, 100.0, "%");
             ui.horizontal(|ui| {
                 row_label(ui, "", LABEL_W);
-                if ui.button("Snap to origin").clicked() {
+                if ui.button(tr("Snap to origin")).clicked() {
                     fx.offset = [0.0, 0.0];
                     finished = true;
                 }
@@ -317,11 +317,11 @@ impl App {
                     ui.spacing_mut().item_spacing = Vec2::splat(4.0);
                     ui.spacing_mut().button_padding = Vec2::splat(2.0);
                     ui.horizontal(|ui| {
-                        ui.label(RichText::new("Patterns").strong());
-                        ui.label(RichText::new("click to apply").small().color(MUTED));
+                        ui.label(RichText::new(tr("Patterns")).strong());
+                        ui.label(RichText::new(tr("click to apply")).small().color(MUTED));
                     });
                     for (title, list) in &sections {
-                        ui.label(RichText::new(*title).small().strong().color(MUTED));
+                        ui.label(RichText::new(tr(*title)).small().strong().color(MUTED));
                         for row in list.chunks(COLUMNS) {
                             ui.horizontal(|ui| {
                                 for p in row {
@@ -343,7 +343,7 @@ impl App {
                         }
                         ui.add_space(4.0);
                     }
-                    if ui.button("Import Photoshop patterns (.pat)…").clicked() {
+                    if ui.button(tr("Import Photoshop patterns (.pat)…")).clicked() {
                         import = true;
                     }
                 });

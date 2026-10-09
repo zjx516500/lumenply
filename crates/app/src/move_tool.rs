@@ -80,10 +80,10 @@ impl App {
     pub(crate) fn auto_select_toggle(&mut self, ui: &mut egui::Ui) {
         let cmd = if cfg!(target_os = "macos") { "⌘" } else { "Ctrl" };
         if ui
-            .checkbox(&mut self.prefs.move_auto_select, "Auto-Select")
-            .on_hover_text(format!(
-                "Click or drag picks the layer under the pointer. {cmd}-click does it once \
-                 while this is off"
+            .checkbox(&mut self.prefs.move_auto_select, tr("Auto-Select"))
+            .on_hover_text(tr_args(
+                "Click or drag picks the layer under the pointer. {cmd}-click does it once while this is off",
+                &[("cmd", cmd.to_string())],
             ))
             .changed()
         {

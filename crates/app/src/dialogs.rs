@@ -610,7 +610,8 @@ impl App {
         let mut filter_changed = false;
         // On a smart object the filter goes on as a smart filter.
         let as_smart_filter = self.filters_go_smart();
-        let shown = egui::Window::new(title)
+        let shown = egui::Window::new(tr(title))
+            .id(egui::Id::new(title))
             .collapsible(false)
             .resizable(false)
             .title_bar(false)
@@ -669,7 +670,7 @@ impl App {
                             if *phase >= 1 {
                                 ui.horizontal(|ui| {
                                     ui.add(egui::Spinner::new().size(18.0).color(ACCENT));
-                                    ui.label(RichText::new("Filling the selection from its surroundings…").color(TEXT));
+                                    ui.label(RichText::new(tr("Filling the selection from its surroundings…")).color(TEXT));
                                 });
                                 *phase = 2;
                                 ui.ctx().request_repaint();
@@ -716,17 +717,17 @@ impl App {
                                 brand::paint_mark(ui.painter(), r.shrink(14.0), TEXT, ACCENT, GROUND);
                                 ui.add_space(6.0);
                                 ui.label(
-                                    RichText::new("Lumenply")
+                                    RichText::new(tr("Lumenply"))
                                         .family(egui::FontFamily::Name("semibold".into()))
                                         .size(26.0)
                                         .color(TEXT),
                                 );
                                 ui.label(
-                                    RichText::new(format!("Public beta {}", env!("CARGO_PKG_VERSION")))
+                                    RichText::new(tr_args("Public beta {0}", &[("0", env!("CARGO_PKG_VERSION").to_string())]))
                                         .monospace()
                                         .color(MUTED),
                                 );
-                                ui.label(RichText::new("Free photo editor — GPL-3.0").color(MUTED));
+                                ui.label(RichText::new(tr("Free photo editor — GPL-3.0")).color(MUTED));
                                 ui.add_space(8.0);
                                 if ui.add(primary_button("Close")).clicked() || enter || esc {
                                     keep = false;
@@ -788,8 +789,8 @@ impl App {
                                     });
                                 a11y_name(&r.response, "Saved selection");
                                 if ui
-                                    .add(egui::Button::new(RichText::new("Delete").small().color(MUTED)).frame(false))
-                                    .on_hover_text("Forget this saved selection")
+                                    .add(egui::Button::new(RichText::new(tr("Delete")).small().color(MUTED)).frame(false))
+                                    .on_hover_text(tr("Forget this saved selection"))
                                     .clicked()
                                 {
                                     delete = true;
@@ -799,7 +800,7 @@ impl App {
                                 row_label(ui, "Operation", LABEL_W);
                                 crate::options_bar::select_ops(ui, op);
                             });
-                            check(ui, invert, "Invert");
+                            check(ui, invert, tr("Invert"));
                             if delete && !names.is_empty() {
                                 self.run(&lumenply_core::channels::DeleteSavedSelection { index: *index });
                                 if self.editor.doc().saved_selections.is_empty() {
@@ -842,7 +843,7 @@ impl App {
                                 .horizontal(|ui| {
                                     ui.add_sized(
                                         [LABEL_W, 18.0],
-                                        egui::Label::new(RichText::new("Colour").color(MUTED)),
+                                        egui::Label::new(RichText::new(tr("Colour")).color(MUTED)),
                                     );
                                     crate::color_picker::color_edit_button_rgb(ui, &mut self.brush_rgb)
                                         .changed()
@@ -887,7 +888,7 @@ impl App {
                             p.render_cache_mb = mb.round() as usize;
                             ui.horizontal(|ui| {
                                 row_label(ui, "", wide.label_w);
-                                check(ui, &mut p.show_render_cache, "Show its memory use in the status bar");
+                                check(ui, &mut p.show_render_cache, tr("Show its memory use in the status bar"));
                             });
                             ui.horizontal(|ui| {
                                 row_label(ui, "Canvas surround", wide.label_w);
@@ -944,7 +945,7 @@ impl App {
                             // command's chord, or a bare key).
                             let refused_id = egui::Id::new("prefs-shortcut-refused");
                             if let Some(why) = ui.data(|d| d.get_temp::<String>(refused_id)) {
-                                ui.label(RichText::new(why).color(ACCENT));
+                                ui.label(RichText::new(tr(why)).color(ACCENT));
                             }
                             // Click a binding, press the new keys; Esc cancels.
                             if let Some(active) = capturing.clone() {
@@ -1001,7 +1002,7 @@ impl App {
                                                 session::chord_label(ui.ctx(), p, id)
                                             };
                                             let highlight = capturing.as_deref() == Some(*id);
-                                            let btn = egui::Button::new(RichText::new(text).monospace())
+                                            let btn = egui::Button::new(RichText::new(tr(text)).monospace())
                                                 .min_size(egui::vec2(120.0, 22.0))
                                                 .fill(if highlight { ACCENT_TINT } else { GROUND })
                                                 .stroke(Stroke::new(
@@ -1016,19 +1017,19 @@ impl App {
                                                 session::chord_label(ui.ctx(), p, id)
                                             );
                                             a11y_name(&r, &spoken);
-                                            if r.on_hover_text(format!("Click, then press the new keys for {label}"))
+                                            if r.on_hover_text(tr_args("Click, then press the new keys for {label}", &[("label", tr(*label))]))
                                                 .clicked()
                                             {
                                                 *capturing = Some(id.to_string());
                                                 ui.data_mut(|d| d.remove::<String>(refused_id));
                                             }
                                             let reset = p.shortcuts.contains_key(*id).then(|| {
-                                                let r = ui.small_button("Reset");
+                                                let r = ui.small_button(tr("Reset"));
                                                 a11y_name(&r, &format!("Reset shortcut for {label}"));
                                                 r
                                             });
                                             if reset.is_some_and(|r| {
-                                                r.on_hover_text("Back to the default shortcut").clicked()
+                                                r.on_hover_text(tr("Back to the default shortcut")).clicked()
                                             }) {
                                                 p.shortcuts.remove(*id);
                                             }
@@ -1041,9 +1042,7 @@ impl App {
                             let backups = session::autosave_backups();
                             let n = backups.len();
                             let text = if n > 1 {
-                                format!(
-                                    "The previous session left autosaved backups of {n} documents, probably after a crash."
-                                )
+                                tr_args("The previous session left autosaved backups of {n} documents, probably after a crash.", &[("n", n.to_string())])
                             } else {
                                 "The previous session left an autosaved backup, probably after a crash.".to_string()
                             };
@@ -1064,7 +1063,7 @@ impl App {
                                 }
                                 if ui
                                     .add(footer_button(if n > 1 { "Discard backups" } else { "Discard backup" }))
-                                    .on_hover_text("Delete the autosaved work and start fresh")
+                                    .on_hover_text(tr("Delete the autosaved work and start fresh"))
                                     .clicked()
                                 {
                                     session::remove_autosave();
@@ -1076,13 +1075,16 @@ impl App {
                             // Quitting asks about each unsaved document in
                             // turn, as Photoshop does; this one is live.
                             let others = self.tab_infos().iter().filter(|t| t.1).count().saturating_sub(1);
-                            note(ui, &format!("Save changes to “{}” before quitting?", self.live_title()));
+                            note(ui, &tr_args("Save changes to “{name}” before quitting?", &[("name", self.live_title())]));
                             if others > 0 {
-                                let (n, verb) = match others {
-                                    1 => ("1 other document".to_string(), "has"),
-                                    n => (format!("{n} other documents"), "have"),
-                                };
-                                note(ui, &format!("{n} also {verb} unsaved changes."));
+                                let count = tr_args(
+                                    if others == 1 { "1 other document" } else { "{count} other documents" },
+                                    &[("count", others.to_string())],
+                                );
+                                note(ui, &tr_args("{n} also {verb} unsaved changes.", &[
+                                    ("n", count),
+                                    ("verb", if others == 1 { "has" } else { "have" }.to_string()),
+                                ]));
                             }
                             footer(ui, |ui| {
                                 if ui.add(primary_button("Save")).clicked() || enter {
@@ -1100,7 +1102,7 @@ impl App {
                                 ui.add_space(16.0);
                                 if ui
                                     .add(footer_button("Don't save"))
-                                    .on_hover_text("Discard the changes to this document")
+                                    .on_hover_text(tr("Discard the changes to this document"))
                                     .clicked()
                                 {
                                     self.quit_past_live(ctx);
@@ -1110,7 +1112,7 @@ impl App {
                         }
                         Dialog::ConfirmCloseTab(i) => {
                             let i = *i;
-                            note(ui, &format!("Save changes to “{}” before closing?", self.live_title()));
+                            note(ui, &tr_args("Save changes to “{name}” before closing?", &[("name", self.live_title())]));
                             footer(ui, |ui| {
                                 if ui.add(primary_button("Save and close")).clicked() || enter {
                                     self.save_live();
@@ -1125,7 +1127,7 @@ impl App {
                                 ui.add_space(16.0);
                                 if ui
                                     .add(footer_button("Close without saving"))
-                                    .on_hover_text("Discard the changes and close the document")
+                                    .on_hover_text(tr("Discard the changes and close the document"))
                                     .clicked()
                                 {
                                     self.force_close_tab(i);
@@ -1268,7 +1270,7 @@ impl App {
             raise_modal(ctx, backdrop, shown.response.layer_id);
             ctx.accesskit_node_builder(shown.response.id, |b| {
                 b.set_role(egui::accesskit::Role::Dialog);
-                b.set_name(title);
+                b.set_name(tr(title));
             });
         }
 
@@ -1497,7 +1499,7 @@ const DIALOG_MARGIN: f32 = 16.0;
 /// hairline one margin below the title text). egui's own bar is a focusable
 /// control with no name, and the first Tab stop; this title is plain paint.
 pub(crate) fn titled<R>(ui: &mut egui::Ui, title: &str, body: impl FnOnce(&mut egui::Ui) -> R) -> R {
-    let galley = egui::WidgetText::from(title).into_galley(
+    let galley = egui::WidgetText::from(tr(title)).into_galley(
         ui,
         Some(egui::TextWrapMode::Extend),
         f32::INFINITY,
@@ -1526,7 +1528,7 @@ pub(crate) fn titled<R>(ui: &mut egui::Ui, title: &str, body: impl FnOnce(&mut e
 
 /// A muted explanatory line, wrapped to the dialog width.
 pub(crate) fn note(ui: &mut egui::Ui, text: &str) {
-    ui.add(egui::Label::new(RichText::new(text).color(MUTED)).wrap());
+    ui.add(egui::Label::new(RichText::new(tr(text)).color(MUTED)).wrap());
 }
 
 /// The dialog footer: a hairline, then buttons laid right to left (add
@@ -1584,10 +1586,13 @@ fn anchor_grid(ui: &mut egui::Ui, anchor: &mut (f32, f32)) {
                             egui::WidgetType::RadioButton,
                             true,
                             on,
-                            format!("Anchor {name}"),
+                            tr_args("Anchor {name}", &[("name", tr(*name))]),
                         )
                     });
-                    if resp.on_hover_text(format!("Anchor {name}")).clicked() {
+                    if resp
+                        .on_hover_text(tr_args("Anchor {name}", &[("name", tr(*name))]))
+                        .clicked()
+                    {
                         *anchor = a;
                     }
                 }

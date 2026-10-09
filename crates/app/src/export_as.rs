@@ -279,7 +279,7 @@ impl App {
             .exact_height(40.0)
             .show(ctx, |ui| {
                 ui.horizontal_centered(|ui| {
-                    ui.label(RichText::new("Export As").strong().color(TEXT));
+                    ui.label(RichText::new(tr("Export As")).strong().color(TEXT));
                     let name = self
                         .path
                         .as_ref()
@@ -313,8 +313,8 @@ impl App {
                 );
                 ui.add_space(4.0);
                 if s.format.has_alpha() {
-                    check(ui, &mut s.transparency, "Transparency")
-                        .on_hover_text("Untick to place the image on white");
+                    check(ui, &mut s.transparency, tr("Transparency"))
+                        .on_hover_text(tr("Untick to place the image on white"));
                 } else {
                     let mut q = s.quality as f32;
                     let opts = RowOpts {
@@ -373,15 +373,19 @@ impl App {
                     _ => "Measuring…".to_string(),
                 };
                 ui.label(
-                    RichText::new(format!(
-                        "{} × {} px  ·  {size}",
-                        st.settings.width, st.settings.height
+                    RichText::new(tr_args(
+                        "{0} × {1} px  ·  {size}",
+                        &[
+                            ("0", st.settings.width.to_string()),
+                            ("1", st.settings.height.to_string()),
+                            ("size", size.to_string()),
+                        ],
                     ))
                     .monospace()
                     .color(TEXT),
                 );
                 ui.label(
-                    RichText::new("sRGB, colour profile embedded")
+                    RichText::new(tr("sRGB, colour profile embedded"))
                         .small()
                         .color(MUTED),
                 );
@@ -419,7 +423,7 @@ impl App {
                         ui.painter().text(
                             img.left_top() + egui::vec2(10.0, 10.0),
                             Align2::LEFT_TOP,
-                            "Updating…",
+                            tr("Updating…"),
                             FontId::proportional(13.0),
                             TEXT,
                         );

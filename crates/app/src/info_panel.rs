@@ -86,8 +86,8 @@ impl App {
                 float_frame().show(ui, |ui| {
                     ui.set_width(NAV_W);
                     close = float_header(ui, "INFO", "Close Info");
-                    let key = |s: &str| RichText::new(s).monospace().color(MUTED);
-                    let val = |s: String| RichText::new(s).monospace().color(TEXT);
+                    let key = |s: &str| RichText::new(tr(s)).monospace().color(MUTED);
+                    let val = |s: String| RichText::new(tr(s)).monospace().color(TEXT);
                     let dash = || "–".to_string();
                     let two = |ui: &mut egui::Ui, id: &str, rows: [(&str, String, &str, String); 3]| {
                         egui::Grid::new(id)
@@ -134,13 +134,13 @@ impl App {
                     );
                     ui.separator();
                     ui.horizontal(|ui| {
-                        ui.label(RichText::new("Document").color(MUTED));
+                        ui.label(RichText::new(tr("Document")).color(MUTED));
                         ui.label(val(format!("{dw} × {dh} px")));
                     });
                     ui.horizontal(|ui| {
-                        ui.label(RichText::new("Print").color(MUTED));
+                        ui.label(RichText::new(tr("Print")).color(MUTED));
                         ui.label(val(print));
-                        ui.label(RichText::new(ppi).monospace().color(MUTED));
+                        ui.label(RichText::new(tr(ppi)).monospace().color(MUTED));
                     });
                 });
             });

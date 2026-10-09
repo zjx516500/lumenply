@@ -373,10 +373,7 @@ impl App {
                 section_title(ui, "AS ADJUSTMENT LAYER");
                 for (name, adj) in ps_ordered_presets() {
                     let r = menu_item_response(ui, !self.no_doc, name, "");
-                    let r = r.on_hover_text(format!(
-                        "Adds a {name} adjustment layer: editable any time in Properties, \
-                         the pixels below stay untouched"
-                    ));
+                    let r = r.on_hover_text(tr_args("Adds a {name} adjustment layer: editable any time in Properties, the pixels below stay untouched", &[("name", tr(name))]));
                     if r.clicked() {
                         ui.close_menu();
                         self.add_adjustment(adj);
@@ -393,8 +390,8 @@ impl App {
         let keys = self.action_keys(&ctx, id);
         let r = menu_item_response(ui, block.is_none(), label, &keys);
         let r = match block {
-            Some(why) => r.on_disabled_hover_text(why),
-            None => r.on_hover_text(hint),
+            Some(why) => r.on_disabled_hover_text(tr(why)),
+            None => r.on_hover_text(tr(hint)),
         };
         if r.clicked() {
             ui.close_menu();
@@ -649,7 +646,7 @@ impl App {
         let thumb_tex = st.thumb.clone();
         let mut thumb_pick: Option<(i32, i32)> = None;
         let doc_size = (self.editor.doc().width, self.editor.doc().height);
-        let shown = egui::Window::new(title)
+        let shown = egui::Window::new(tr(title))
             .id(egui::Id::new("adjx-dialog"))
             .collapsible(false)
             .resizable(false)
@@ -683,12 +680,12 @@ impl App {
                                 let presets = sh_presets();
                                 let cur = presets.iter().find(|(_, q)| q == p).map_or("Custom", |(n, _)| *n);
                                 let r = egui::ComboBox::from_id_salt("adjx-sh-preset")
-                                    .selected_text(cur)
+                                    .selected_text(tr(cur))
                                     .width(190.0)
                                     .show_ui(ui, |ui| {
                                         popup_style(ui);
                                         for (n, q) in &presets {
-                                            if ui.selectable_label(q == p, *n).clicked() {
+                                            if ui.selectable_label(q == p, tr(*n)).clicked() {
                                                 *p = *q;
                                             }
                                         }
@@ -734,7 +731,7 @@ impl App {
                                 if r.changed() {
                                     rc.color = swatch.map(lumenply_io::srgb_to_linear_f);
                                 }
-                                ui.label(RichText::new("or click the image").small().color(MUTED));
+                                ui.label(RichText::new(tr("or click the image")).small().color(MUTED));
                             });
                             let (na, nr) = (rc.added.len(), rc.removed.len());
                             ui.horizontal(|ui| {
@@ -744,8 +741,8 @@ impl App {
                                 } else {
                                     format!("+{na} added, −{nr} removed")
                                 };
-                                ui.label(RichText::new(text).small().color(MUTED));
-                                if na + nr > 0 && ui.small_button("Reset").clicked() {
+                                ui.label(RichText::new(tr(text)).small().color(MUTED));
+                                if na + nr > 0 && ui.small_button(tr("Reset")).clicked() {
                                     rc.added.clear();
                                     rc.removed.clear();
                                 }
@@ -760,7 +757,9 @@ impl App {
                                     let r = ui
                                         .add(egui::Image::new((tex.id(), size)).sense(Sense::click()))
                                         .on_hover_cursor(egui::CursorIcon::Crosshair)
-                                        .on_hover_text("Click to sample a colour (Shift adds, Alt removes)");
+                                        .on_hover_text(tr(
+                                            "Click to sample a colour (Shift adds, Alt removes)",
+                                        ));
                                     a11y_name(&r, "Replace Color preview");
                                     if r.clicked() {
                                         thumb_pick = r
@@ -791,12 +790,12 @@ impl App {
                             slider_row_scaled(ui, "Fade", &mut m.fade, 0.0..=1.0, 100.0, " %");
                             ui.horizontal(|ui| {
                                 row_label(ui, "", LABEL_W);
-                                check(ui, &mut m.neutralize, "Neutralize");
+                                check(ui, &mut m.neutralize, tr("Neutralize"));
                             });
                             if selection {
                                 ui.horizontal(|ui| {
                                     row_label(ui, "", LABEL_W);
-                                    check(ui, from_selection, "Use the selection's colours");
+                                    check(ui, from_selection, tr("Use the selection's colours"));
                                 });
                             }
                             section_title(ui, "SOURCE");
@@ -806,11 +805,11 @@ impl App {
                                     doc_titles.get(i).cloned().unwrap_or_default()
                                 });
                                 let r = egui::ComboBox::from_id_salt("adjx-source-doc")
-                                    .selected_text(cur)
+                                    .selected_text(tr(cur))
                                     .width(190.0)
                                     .show_ui(ui, |ui| {
                                         popup_style(ui);
-                                        if ui.selectable_label(pick.doc.is_none(), "None").clicked() {
+                                        if ui.selectable_label(pick.doc.is_none(), tr("None")).clicked() {
                                             *pick = SourcePick {
                                                 doc: None,
                                                 layer: None,
@@ -849,15 +848,21 @@ impl App {
                                         .and_then(|id| layers.iter().find(|(l, _)| *l == id))
                                         .map_or("Merged".to_string(), |(_, n)| n.clone());
                                     let r = egui::ComboBox::from_id_salt("adjx-source-layer")
-                                        .selected_text(cur)
+                                        .selected_text(tr(cur))
                                         .width(190.0)
                                         .show_ui(ui, |ui| {
                                             popup_style(ui);
-                                            if ui.selectable_label(pick.layer.is_none(), "Merged").clicked() {
+                                            if ui
+                                                .selectable_label(pick.layer.is_none(), tr("Merged"))
+                                                .clicked()
+                                            {
                                                 pick.layer = None;
                                             }
                                             for (id, n) in &layers {
-                                                if ui.selectable_label(pick.layer == Some(*id), n).clicked() {
+                                                if ui
+                                                    .selectable_label(pick.layer == Some(*id), tr(n))
+                                                    .clicked()
+                                                {
                                                     pick.layer = Some(*id);
                                                 }
                                             }
@@ -876,7 +881,7 @@ impl App {
                     }
                     ui.horizontal(|ui| {
                         row_label(ui, "", LABEL_W);
-                        check(ui, &mut st.preview, "Preview");
+                        check(ui, &mut st.preview, tr("Preview"));
                     });
                     crate::dialogs::footer(ui, |ui| {
                         if ui.add(primary_button("OK")).clicked() || enter {

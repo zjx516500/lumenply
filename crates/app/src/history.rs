@@ -35,9 +35,9 @@ impl App {
             .show(ctx, |ui| {
                 let current = self.editor.history().len();
                 let revisions = self.editor.revisions();
-                let labels: Vec<String> = std::iter::once(self.editor.base_label().to_string())
-                    .chain(self.editor.history().iter().map(|s| s.to_string()))
-                    .chain(self.editor.redo_history().iter().map(|s| s.to_string()))
+                let labels: Vec<String> = std::iter::once(i18n::tr_history(self.editor.base_label()))
+                    .chain(self.editor.history().iter().map(|s| i18n::tr_history(s)))
+                    .chain(self.editor.redo_history().iter().map(|s| i18n::tr_history(s)))
                     .collect();
                 let mut jump = None;
                 let mut source = None;
@@ -58,8 +58,15 @@ impl App {
                         let now = labels.get(current).map_or("", String::as_str);
                         ui.add(
                             egui::Label::new(
-                                RichText::new(format!("Step {} of {} · {now}", current, labels.len() - 1))
-                                    .color(MUTED),
+                                RichText::new(tr_args(
+                                    "Step {0} of {1} · {now}",
+                                    &[
+                                        ("0", current.to_string()),
+                                        ("1", (labels.len() - 1).to_string()),
+                                        ("now", now.to_string()),
+                                    ],
+                                ))
+                                .color(MUTED),
                             )
                             .truncate(),
                         );
@@ -79,7 +86,7 @@ impl App {
                                     restore = Some(k);
                                 }
                                 context_menu(&resp, |ui| {
-                                    if ui.button("Delete snapshot").clicked() {
+                                    if ui.button(tr("Delete snapshot")).clicked() {
                                         drop_snap = Some(k);
                                         ui.close_menu();
                                     }
@@ -99,11 +106,11 @@ impl App {
                                     jump = Some(i);
                                 }
                                 context_menu(&resp, |ui| {
-                                    if ui.button("New snapshot").clicked() {
+                                    if ui.button(tr("New snapshot")).clicked() {
                                         snap_from = Some(i);
                                         ui.close_menu();
                                     }
-                                    if ui.button("Use as history brush source").clicked() {
+                                    if ui.button(tr("Use as history brush source")).clicked() {
                                         source = Some(i);
                                         ui.close_menu();
                                     }
@@ -233,13 +240,23 @@ impl App {
         };
         // Named with its number, so a step called "Select" or "Open" is
         // never mistaken for the menu of that name.
-        resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, card_name(i, label)));
+        resp.widget_info(|| {
+            egui::WidgetInfo::labeled(egui::WidgetType::Button, true, tr(card_name(i, label)))
+        });
         let src = if source {
             "\nThe history brush paints from here"
         } else {
             ""
         };
-        resp.on_hover_text(format!("{label}\n{what} {i} · click to jump here{src}"))
+        resp.on_hover_text(tr_args(
+            "{label}\n{what} {i} · click to jump here{src}",
+            &[
+                ("label", label.to_string()),
+                ("what", what.to_string()),
+                ("i", i.to_string()),
+                ("src", src.to_string()),
+            ],
+        ))
     }
 
     /// Record a thumbnail for the current history step from the composited
@@ -323,7 +340,7 @@ fn history_header(ui: &mut egui::Ui, collapsed: bool, current: usize, steps: usi
     p.text(
         egui::pos2(rect.min.x + 19.0, title_y),
         Align2::LEFT_CENTER,
-        "HISTORY",
+        tr("HISTORY"),
         FontId::new(10.5, egui::FontFamily::Name("semibold".into())),
         ink,
     );
@@ -332,7 +349,13 @@ fn history_header(ui: &mut egui::Ui, collapsed: bool, current: usize, steps: usi
         p.text(
             egui::pos2(rect.min.x + 19.0, title_y + 16.0),
             Align2::LEFT_CENTER,
-            format!("{n} step{}", if n == 1 { "" } else { "s" }),
+            tr_args(
+                "{n} step{0}",
+                &[
+                    ("n", n.to_string()),
+                    ("0", if n == 1 { "" } else { "s" }.to_string()),
+                ],
+            ),
             FontId::proportional(10.5),
             MUTED,
         );
@@ -346,10 +369,16 @@ fn history_header(ui: &mut egui::Ui, collapsed: bool, current: usize, steps: usi
         egui::WidgetInfo::labeled(
             egui::WidgetType::Button,
             true,
-            format!("History, step {current} of {}", steps.saturating_sub(1)),
+            tr_args(
+                "History, step {current} of {0}",
+                &[
+                    ("current", current.to_string()),
+                    ("0", steps.saturating_sub(1).to_string()),
+                ],
+            ),
         )
     });
-    resp.on_hover_text(tip).clicked()
+    resp.on_hover_text(tr(tip)).clicked()
 }
 
 /// A snapshot's card: its name in a well outlined in the accent colour.
@@ -379,7 +408,10 @@ fn snapshot_card(ui: &mut egui::Ui, name: &str) -> egui::Response {
     let (galley, _) = elided(ui, name, FontId::proportional(10.5), TEXT, CARD.x);
     p.galley(egui::pos2(rect.min.x, rect.min.y + WELL_H + 2.0), galley, TEXT);
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, snapshot_name(name)));
-    resp.on_hover_text(format!("{name}: click to go back to it (one undo step)"))
+    resp.on_hover_text(tr_args(
+        "{name}: click to go back to it (one undo step)",
+        &[("name", name.to_string())],
+    ))
 }
 
 #[cfg(test)]

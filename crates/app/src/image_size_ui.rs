@@ -422,12 +422,12 @@ fn unit_row<U: Copy + PartialEq>(
         if let Some((salt, u, options)) = unit {
             let current = options.iter().find(|(v, _)| v == u).map_or("", |(_, l)| *l);
             let c = egui::ComboBox::from_id_salt(salt)
-                .selected_text(current)
+                .selected_text(tr(current))
                 .width(132.0)
                 .show_ui(ui, |ui| {
                     popup_style(ui);
                     for (v, l) in options {
-                        ui.selectable_value(u, *v, *l);
+                        ui.selectable_value(u, *v, tr(*l));
                     }
                 });
             a11y_name(&c.response, &format!("{label} unit"));
@@ -441,7 +441,7 @@ fn unit_row<U: Copy + PartialEq>(
 pub(crate) fn image_size_ui(ui: &mut egui::Ui, st: &mut ImageSizeState) {
     ui.horizontal(|ui| {
         row_label(ui, "Dimensions", LABEL_W);
-        ui.label(RichText::new(st.pixels_summary()).monospace().color(TEXT));
+        ui.label(RichText::new(tr(st.pixels_summary())).monospace().color(TEXT));
     });
     ui.add_space(4.0);
     let units: Vec<(SizeUnit, &str)> = SizeUnit::ALL.iter().map(|u| (*u, u.label())).collect();
@@ -476,7 +476,7 @@ pub(crate) fn image_size_ui(ui: &mut egui::Ui, st: &mut ImageSizeState) {
     ui.horizontal(|ui| {
         ui.add_space(LABEL_W + ui.spacing().item_spacing.x);
         ui.add_enabled_ui(st.resample, |ui| {
-            check(ui, &mut st.constrain, "Keep aspect ratio")
+            check(ui, &mut st.constrain, tr("Keep aspect ratio"))
         });
     });
     let res_units = [
@@ -500,7 +500,7 @@ pub(crate) fn image_size_ui(ui: &mut egui::Ui, st: &mut ImageSizeState) {
     ui.horizontal(|ui| {
         ui.add_space(LABEL_W + ui.spacing().item_spacing.x);
         let mut on = st.resample;
-        if check(ui, &mut on, "Resample").changed() {
+        if check(ui, &mut on, tr("Resample")).changed() {
             st.set_resample(on);
         }
     });
@@ -551,7 +551,7 @@ pub(crate) fn new_doc_ui(ui: &mut egui::Ui, w: &mut u32, h: &mut u32, ppi: &mut 
         let current = matching_preset(*w, *h, *ppi).map_or("Custom", |i| NEW_PRESETS[i].0);
         let mut pick = None;
         let r = egui::ComboBox::from_id_salt("new-doc-preset")
-            .selected_text(current)
+            .selected_text(tr(current))
             .width(232.0)
             .show_ui(ui, |ui| {
                 popup_style(ui);

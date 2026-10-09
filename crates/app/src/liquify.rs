@@ -285,11 +285,11 @@ impl App {
             .exact_height(40.0)
             .show(ctx, |ui| {
                 ui.horizontal_centered(|ui| {
-                    ui.label(RichText::new("Liquify").strong().color(TEXT));
-                    ui.label(RichText::new(&st.layer_name).color(MUTED));
+                    ui.label(RichText::new(tr("Liquify")).strong().color(TEXT));
+                    ui.label(RichText::new(tr(&st.layer_name)).color(MUTED));
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         ui.label(
-                            RichText::new("Drag to warp  ·  [ ] brush size  ·  Cmd+Z undo stroke")
+                            RichText::new(tr("Drag to warp  ·  [ ] brush size  ·  Cmd+Z undo stroke"))
                                 .color(MUTED),
                         );
                     });
@@ -322,7 +322,7 @@ impl App {
                     resp.widget_info(|| {
                         egui::WidgetInfo::selected(egui::WidgetType::Button, true, on, tool.name())
                     });
-                    if resp.on_hover_text(tip).clicked() {
+                    if resp.on_hover_text(tr(tip)).clicked() {
                         st.tool = tool;
                     }
                 }
@@ -338,7 +338,7 @@ impl App {
             )
             .show(ctx, |ui| {
                 raise_controls(ui);
-                ui.label(RichText::new("BRUSH").small().strong().color(MUTED));
+                ui.label(RichText::new(tr("BRUSH")).small().strong().color(MUTED));
                 ui.add_space(4.0);
                 let opts = RowOpts {
                     label_w: 70.0,
@@ -351,17 +351,17 @@ impl App {
                     slider_row_scaled_w(ui, "Rate", &mut st.rate, 0.01..=1.0, 100.0, "%", 70.0);
                 });
                 ui.add_space(10.0);
-                ui.label(RichText::new("VIEW").small().strong().color(MUTED));
+                ui.label(RichText::new(tr("VIEW")).small().strong().color(MUTED));
                 ui.add_space(4.0);
-                check(ui, &mut st.show_mesh, "Show mesh");
+                check(ui, &mut st.show_mesh, tr("Show mesh"));
                 ui.add_space(10.0);
-                ui.label(RichText::new("RECONSTRUCT").small().strong().color(MUTED));
+                ui.label(RichText::new(tr("RECONSTRUCT")).small().strong().color(MUTED));
                 ui.add_space(4.0);
                 ui.horizontal(|ui| {
                     let any = !st.field.is_identity();
                     if ui
-                        .add_enabled(any, egui::Button::new("Restore all"))
-                        .on_hover_text("Undo every warp (Cmd+Z brings it back)")
+                        .add_enabled(any, egui::Button::new(tr("Restore all")))
+                        .on_hover_text(tr("Undo every warp (Cmd+Z brings it back)"))
                         .clicked()
                     {
                         st.checkpoint();
@@ -369,7 +369,7 @@ impl App {
                         st.dirty = true;
                     }
                     if ui
-                        .add_enabled(!st.undo.is_empty(), egui::Button::new("Undo stroke"))
+                        .add_enabled(!st.undo.is_empty(), egui::Button::new(tr("Undo stroke")))
                         .clicked()
                     {
                         if let Some(prev) = st.undo.pop() {

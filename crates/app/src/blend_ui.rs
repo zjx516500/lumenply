@@ -3,6 +3,7 @@
 //! lighten, contrast, inversion, component) with a separator between
 //! groups and Photoshop's display names.
 
+use crate::i18n::tr;
 use eframe::egui;
 use lumenply_doc::BlendMode;
 
@@ -37,7 +38,7 @@ pub(crate) fn blend_combo(
     // inside it, so it never scrolls (it can't be given a spoken name);
     // the inner, named one does.
     let mut combo = egui::ComboBox::from_id_salt(id_salt)
-        .selected_text(sel.map_or("Pass Through", |m| m.label()))
+        .selected_text(tr(sel.map_or("Pass Through", |m| m.label())))
         .height(height + 8.0);
     if let Some(w) = width {
         combo = combo.width(w);
@@ -57,7 +58,7 @@ pub(crate) fn blend_combo(
                 .max_height(height)
                 .show(ui, |ui| {
                     if pass_through {
-                        ui.selectable_value(sel, None, "Pass Through");
+                        ui.selectable_value(sel, None, tr("Pass Through"));
                         ui.separator();
                     }
                     for (i, group) in BlendMode::GROUPS.iter().enumerate() {
@@ -65,7 +66,7 @@ pub(crate) fn blend_combo(
                             ui.separator();
                         }
                         for &m in group.iter() {
-                            ui.selectable_value(sel, Some(m), m.label());
+                            ui.selectable_value(sel, Some(m), tr(m.label()));
                         }
                     }
                 });

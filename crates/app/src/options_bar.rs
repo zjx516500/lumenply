@@ -45,7 +45,7 @@ impl App {
                         let tight = tier == Tier::Tight;
                         if !tight {
                             ui.label(
-                                RichText::new("Free Transform")
+                                RichText::new(tr("Free Transform"))
                                     .family(egui::FontFamily::Name("semibold".into()))
                                     .color(TEXT),
                             );
@@ -80,7 +80,7 @@ impl App {
                             let mut rot = x.angle.to_degrees();
                             let mut skew = x.shear.atan().to_degrees();
                             let field = |ui: &mut egui::Ui, label: &str, dv: egui::DragValue| {
-                                ui.label(RichText::new(label).color(MUTED));
+                                ui.label(RichText::new(tr(label)).color(MUTED));
                                 let r = num_field(ui, dv.fixed_decimals(1), if tight { 60.0 } else { 70.0 });
                                 a11y_name(
                                     &r,
@@ -118,9 +118,9 @@ impl App {
                         });
                         let mut persp = persp;
                         if ui
-                            .add_enabled(!smart, egui::Checkbox::new(&mut persp, "Perspective"))
-                            .on_hover_text("Drag each corner freely; edges carry both of their corners")
-                            .on_disabled_hover_text(affine_only)
+                            .add_enabled(!smart, egui::Checkbox::new(&mut persp, tr("Perspective")))
+                            .on_hover_text(tr("Drag each corner freely; edges carry both of their corners"))
+                            .on_disabled_hover_text(tr(affine_only))
                             .changed()
                         {
                             x.quad = persp.then(|| x.corners());
@@ -130,9 +130,9 @@ impl App {
                         }
                         let mut warping = warping;
                         if ui
-                            .add_enabled(!smart, egui::Checkbox::new(&mut warping, "Warp"))
-                            .on_hover_text("Bend the layer through a 4×4 mesh: drag any point")
-                            .on_disabled_hover_text(affine_only)
+                            .add_enabled(!smart, egui::Checkbox::new(&mut warping, tr("Warp")))
+                            .on_hover_text(tr("Bend the layer through a 4×4 mesh: drag any point"))
+                            .on_disabled_hover_text(tr(affine_only))
                             .changed()
                         {
                             // Start the mesh where the box is now, so
@@ -150,14 +150,14 @@ impl App {
                                     RichText::new(enter).color(ACCENT_INK.gamma_multiply(0.7)),
                                 ),
                             )
-                            .on_hover_text("Commit the transform (Enter)")
+                            .on_hover_text(tr("Commit the transform (Enter)"))
                             .clicked()
                         {
                             self.commit_free_transform();
                         }
                         if ui
                             .add(footer_button("Cancel").shortcut_text(esc))
-                            .on_hover_text("Drop the transform (Esc)")
+                            .on_hover_text(tr("Drop the transform (Esc)"))
                             .clicked()
                         {
                             self.cancel_free_transform();
@@ -168,34 +168,34 @@ impl App {
                     // the usage hint the bar has no room for) on hover.
                     let hint = tool_hint(self.tool);
                     let tip = match (tier, hint) {
-                        (Tier::Tight, Some(h)) => format!("{}\n{h}", self.tool.tip()),
+                        (Tier::Tight, Some(h)) => format!("{}\n{}", tr(self.tool.tip()), tr(h)),
                         _ => self.tool.tip().to_string(),
                     };
                     ui.label(
-                        RichText::new(self.tool.name())
+                        RichText::new(tr(self.tool.name()))
                             .family(egui::FontFamily::Name("semibold".into()))
                             .color(TEXT),
                     )
-                    .on_hover_text(tip);
+                    .on_hover_text(tr(tip));
                     if self.quick_mask {
-                        let chip = RichText::new("QUICK MASK").small().color(DANGER);
+                        let chip = RichText::new(tr("QUICK MASK")).small().color(DANGER);
                         ui.add(
                             egui::Button::new(chip)
                                 .fill(PANEL)
                                 .stroke(Stroke::new(1.0, DANGER))
                                 .sense(Sense::hover()),
                         )
-                        .on_hover_text("Painting edits the selection (Q exits)");
+                        .on_hover_text(tr("Painting edits the selection (Q exits)"));
                     }
                     if self.editing_mask {
-                        let chip = RichText::new("ON MASK").small().color(ACCENT);
+                        let chip = RichText::new(tr("ON MASK")).small().color(ACCENT);
                         ui.add(
                             egui::Button::new(chip)
                                 .fill(PANEL)
                                 .stroke(Stroke::new(1.0, ACCENT))
                                 .sense(Sense::hover()),
                         )
-                        .on_hover_text("Edits paint on the layer mask (white reveals, black hides)");
+                        .on_hover_text(tr("Edits paint on the layer mask (white reveals, black hides)"));
                     }
                     ui.separator();
                     match self.tool {
@@ -205,13 +205,13 @@ impl App {
                             if ui
                                 .add_enabled(
                                     block.is_none(),
-                                    egui::Button::new("Free transform")
+                                    egui::Button::new(tr("Free transform"))
                                         .shortcut_text(self.action_keys(ui.ctx(), "xform")),
                                 )
-                                .on_hover_text("Scale, rotate, skew, distort or warp the active layer")
-                                .on_disabled_hover_text(
-                                    block.unwrap_or("Select a pixel layer to transform it"),
-                                )
+                                .on_hover_text(tr("Scale, rotate, skew, distort or warp the active layer"))
+                                .on_disabled_hover_text(tr(
+                                    block.unwrap_or("Select a pixel layer to transform it")
+                                ))
                                 .clicked()
                             {
                                 self.begin_free_transform();
@@ -250,10 +250,11 @@ impl App {
                             if changed {
                                 self.tolerance = tol / 100.0;
                             }
-                            check(ui, &mut self.contiguous, "Contiguous")
-                                .on_hover_text("Only fill/select connected pixels");
-                            check(ui, &mut self.sample_merged, "All layers")
-                                .on_hover_text("Sample the merged image instead of the active layer only");
+                            check(ui, &mut self.contiguous, tr("Contiguous"))
+                                .on_hover_text(tr("Only fill/select connected pixels"));
+                            check(ui, &mut self.sample_merged, tr("All layers")).on_hover_text(tr(
+                                "Sample the merged image instead of the active layer only",
+                            ));
                             if self.tool == Tool::Bucket {
                                 let mut op = self.brush.color[3] * 100.0;
                                 if bar_slider(ui, "Opacity", &mut op, 1.0..=100.0, "%", false) {
@@ -278,7 +279,7 @@ impl App {
                                         .find(|(m, _)| *m == self.brush.mode)
                                         .map_or("Paint", |(_, l)| *l);
                                     let r = egui::ComboBox::from_id_salt("brush-mode")
-                                        .selected_text(current)
+                                        .selected_text(tr(current))
                                         .width(96.0)
                                         // Every mode in view: History and
                                         // Blur must not hide below a scroll.
@@ -286,12 +287,12 @@ impl App {
                                         .show_ui(ui, |ui| {
                                             popup_style(ui);
                                             for (m, label) in BRUSH_MODES {
-                                                ui.selectable_value(&mut self.brush.mode, m, label);
+                                                ui.selectable_value(&mut self.brush.mode, m, tr(label));
                                             }
                                         })
                                         .response;
                                     a11y_name(&r, "Brush mode");
-                                    r.on_hover_text(BRUSH_MODE_TIP);
+                                    r.on_hover_text(tr(BRUSH_MODE_TIP));
                                 }
                                 if self.brush.mode == BrushMode::History {
                                     self.history_source_ui(ui);
@@ -310,9 +311,10 @@ impl App {
                                     None => "No source yet".to_string(),
                                 };
                                 if ui
-                                    .selectable_label(picking, "Pick source")
-                                    .on_hover_text(format!(
-                                        "{status}. Next click sets the clone source (or Alt+click)"
+                                    .selectable_label(picking, tr("Pick source"))
+                                    .on_hover_text(tr_args(
+                                        "{status}. Next click sets the clone source (or Alt+click)",
+                                        &[("status", status.to_string())],
                                     ))
                                     .clicked()
                                 {
@@ -321,15 +323,15 @@ impl App {
                                 // On a tight bar the status lives in the tooltip
                                 // above, so the brush sliders keep their room.
                                 if tier != Tier::Tight {
-                                    let text = RichText::new(status);
+                                    let text = RichText::new(tr(status));
                                     ui.label(match self.clone_source {
                                         Some(_) => text.monospace().color(TEXT),
                                         None => text.color(MUTED),
                                     });
                                 }
-                                check(ui, &mut self.sample_merged, "All layers").on_hover_text(
+                                check(ui, &mut self.sample_merged, tr("All layers")).on_hover_text(tr(
                                     "Sample the merged image instead of the active layer only",
-                                );
+                                ));
                             }
                             if needs_source {
                                 ui.separator();
@@ -384,15 +386,15 @@ impl App {
                             if self.tool == Tool::Brush && self.editing_mask {
                                 ui.separator();
                                 if ui
-                                    .button("White")
-                                    .on_hover_text("Paint white: reveal the layer")
+                                    .button(tr("White"))
+                                    .on_hover_text(tr("Paint white: reveal the layer"))
                                     .clicked()
                                 {
                                     self.brush_rgb = [1.0; 3];
                                 }
                                 if ui
-                                    .button("Black")
-                                    .on_hover_text("Paint black: hide the layer")
+                                    .button(tr("Black"))
+                                    .on_hover_text(tr("Paint black: hide the layer"))
                                     .clicked()
                                 {
                                     self.brush_rgb = [0.0; 3];
@@ -403,12 +405,12 @@ impl App {
                             if self.tool == Tool::PolyLasso && !self.lasso.is_empty() {
                                 if ui
                                     .add(primary_button("Close"))
-                                    .on_hover_text("Close the polygon into a selection")
+                                    .on_hover_text(tr("Close the polygon into a selection"))
                                     .clicked()
                                 {
                                     self.finish_polygon(ctx);
                                 }
-                                if ui.button("Cancel").clicked() {
+                                if ui.button(tr("Cancel")).clicked() {
                                     self.lasso.clear();
                                 }
                                 ui.separator();
@@ -432,7 +434,7 @@ impl App {
                             if ui
                                 .add_enabled(has_path && on_pixels, egui::Button::new("Fill path"))
                                 .on_hover_text("Fill the path's area with the brush colour")
-                                .on_disabled_hover_text(need_pixels)
+                                .on_disabled_hover_text(tr(need_pixels))
                                 .clicked()
                             {
                                 if let Some(layer) = self.active {
@@ -443,7 +445,7 @@ impl App {
                             if ui
                                 .add_enabled(has_path && on_pixels, egui::Button::new("Stroke path"))
                                 .on_hover_text("Paint along the path with the current brush")
-                                .on_disabled_hover_text(need_pixels)
+                                .on_disabled_hover_text(tr(need_pixels))
                                 .clicked()
                             {
                                 if let Some(layer) = self.active {
@@ -453,9 +455,9 @@ impl App {
                                 }
                             }
                             if ui
-                                .add_enabled(has_path, egui::Button::new("Make selection"))
+                                .add_enabled(has_path, egui::Button::new(tr("Make selection")))
                                 .on_hover_text("Turn the closed path into a selection")
-                                .on_disabled_hover_text(need_path)
+                                .on_disabled_hover_text(tr(need_path))
                                 .clicked()
                             {
                                 self.run(&PathToSelection { op: self.select_op });
@@ -463,7 +465,7 @@ impl App {
                             if ui
                                 .add_enabled(has_path, egui::Button::new("Clear path"))
                                 .on_hover_text("Delete the work path")
-                                .on_disabled_hover_text(need_path)
+                                .on_disabled_hover_text(tr(need_path))
                                 .clicked()
                             {
                                 self.pen_open = false;
@@ -472,8 +474,8 @@ impl App {
                             ui.separator();
                             if ui
                                 .add_enabled(has_path, egui::Button::new("Save path"))
-                                .on_hover_text("Keep a named copy in the document's Paths list")
-                                .on_disabled_hover_text(need_path)
+                                .on_hover_text(tr("Keep a named copy in the document's Paths list"))
+                                .on_disabled_hover_text(tr(need_path))
                                 .clicked()
                             {
                                 let name = format!("Path {}", self.editor.doc().saved_paths.len() + 1);
@@ -490,7 +492,7 @@ impl App {
                                 let mut load = None;
                                 let mut delete = None;
                                 let r = egui::ComboBox::from_id_salt("saved-paths")
-                                    .selected_text(format!("Paths ({})", names.len()))
+                                    .selected_text(tr_args("Paths ({0})", &[("0", names.len().to_string())]))
                                     .width(130.0)
                                     .show_ui(ui, |ui| {
                                         popup_style(ui);
@@ -500,7 +502,7 @@ impl App {
                                                     load = Some(i);
                                                 }
                                                 if ui
-                                                    .small_button("×")
+                                                    .small_button(tr("×"))
                                                     .on_hover_text("Delete this saved path")
                                                     .clicked()
                                                 {
@@ -526,7 +528,7 @@ impl App {
                             ui.separator();
                             if self.hand_zoom {
                                 ui.label(
-                                    RichText::new("Click to zoom in, Alt-click to zoom out; drag pans")
+                                    RichText::new(tr("Click to zoom in, Alt-click to zoom out; drag pans"))
                                         .weak(),
                                 );
                             } else {
@@ -552,12 +554,12 @@ impl App {
         } else {
             "Save preset"
         };
-        let r = ui.button(save);
+        let r = ui.button(tr(save));
         // A tight bar's "Save" still says what it saves.
         a11y_name(&r, "Save brush preset");
-        if r.on_hover_text(
+        if r.on_hover_text(tr(
             "Save a brush preset: the current tip, size, hardness, opacity, spacing and dynamics",
-        )
+        ))
         .clicked()
         {
             let kind = match &self.brush.tip {
@@ -577,7 +579,10 @@ impl App {
         let mut apply = None;
         let mut delete = None;
         let r = egui::ComboBox::from_id_salt("brush-presets")
-            .selected_text(format!("Presets ({})", self.prefs.brush_presets.len()))
+            .selected_text(tr_args(
+                "Presets ({0})",
+                &[("0", self.prefs.brush_presets.len().to_string())],
+            ))
             .width(120.0)
             .show_ui(ui, |ui| {
                 popup_style(ui);
@@ -586,7 +591,11 @@ impl App {
                         if ui.selectable_label(false, &p.name).clicked() {
                             apply = Some(i);
                         }
-                        if ui.small_button("×").on_hover_text("Delete this preset").clicked() {
+                        if ui
+                            .small_button(tr("×"))
+                            .on_hover_text(tr("Delete this preset"))
+                            .clicked()
+                        {
                             delete = Some(i);
                         }
                     });
@@ -745,7 +754,7 @@ pub(crate) fn bar_value(
 ) -> bool {
     ui.scope(|ui| {
         ui.spacing_mut().item_spacing.x = 6.0;
-        ui.label(RichText::new(label).color(MUTED));
+        ui.label(RichText::new(tr(label)).color(MUTED));
         let span = range.end() - range.start();
         let b = num_field(
             ui,
@@ -758,7 +767,10 @@ pub(crate) fn bar_value(
         );
         a11y_name(&b, label);
         disabled_reason(ui, b)
-            .on_hover_text(format!("{label}: drag to change, click to type"))
+            .on_hover_text(tr_args(
+                "{label}: drag to change, click to type",
+                &[("label", tr(label))],
+            ))
             .changed()
     })
     .inner
@@ -789,7 +801,7 @@ pub(crate) fn greyed_out_because<R>(
 /// A greyed-out bar widget says why, when its row gave a reason.
 fn disabled_reason(ui: &egui::Ui, r: egui::Response) -> egui::Response {
     match ui.data(|d| d.get_temp::<String>(reason_id())) {
-        Some(why) if !ui.is_enabled() => r.on_disabled_hover_text(why),
+        Some(why) if !ui.is_enabled() => r.on_disabled_hover_text(tr(why)),
         _ => r,
     }
 }
@@ -807,7 +819,7 @@ pub(crate) fn bar_slider(
     // Tighter spacing inside the cluster than between clusters.
     ui.scope(|ui| {
         ui.spacing_mut().item_spacing.x = 6.0;
-        ui.label(RichText::new(label).color(MUTED));
+        ui.label(RichText::new(tr(label)).color(MUTED));
         let span = range.end() - range.start();
         let a = ui.add(
             egui::Slider::new(v, range.clone())
@@ -815,7 +827,7 @@ pub(crate) fn bar_slider(
                 .show_value(false),
         );
         a11y_name(&a, label);
-        let a = disabled_reason(ui, a).on_hover_text(label).changed();
+        let a = disabled_reason(ui, a).on_hover_text(tr(label)).changed();
         let b = num_field(
             ui,
             egui::DragValue::new(v)
@@ -867,7 +879,7 @@ fn tool_hint(tool: Tool) -> Option<&'static str> {
 /// in the tool name's tooltip instead).
 pub(crate) fn hint_label(ui: &mut egui::Ui, tier: Tier, tool: Tool) {
     if let (false, Some(h)) = (tier == Tier::Tight, tool_hint(tool)) {
-        ui.label(RichText::new(h).weak());
+        ui.label(RichText::new(tr(h)).weak());
     }
 }
 

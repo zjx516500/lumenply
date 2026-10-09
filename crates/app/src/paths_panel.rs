@@ -109,11 +109,13 @@ impl App {
                 ui.spacing_mut().item_spacing.y = 2.0;
                 if rows.is_empty() {
                     ui.add_space(8.0);
-                    ui.label(RichText::new("No paths yet").color(TEXT));
+                    ui.label(RichText::new(tr("No paths yet")).color(TEXT));
                     ui.label(
-                        RichText::new("Draw one with the Pen (P), or make one from a selection below.")
-                            .small()
-                            .color(MUTED),
+                        RichText::new(tr(
+                            "Draw one with the Pen (P), or make one from a selection below.",
+                        ))
+                        .small()
+                        .color(MUTED),
                     );
                 }
                 for row in &rows {
@@ -187,7 +189,7 @@ impl App {
                             "Click to show it · double-click to rename · Cmd-click to load as selection"
                         }
                     };
-                    let resp = resp.on_hover_text(tip);
+                    let resp = resp.on_hover_text(tr(tip));
                     let row = *row;
                     context_menu(&resp, |ui| {
                         if menu_item_if(ui, on_pixels, "Fill path", "") {

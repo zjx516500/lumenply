@@ -276,7 +276,7 @@ fn style_buttons(ui: &mut egui::Ui, style: &mut GradientStyle) -> bool {
                         egui::WidgetType::RadioButton,
                         true,
                         on,
-                        format!("{} gradient", s.name()),
+                        tr_args("{name} gradient", &[("name", tr(s.name()))]),
                     )
                 });
                 let p = ui.painter();
@@ -289,7 +289,10 @@ fn style_buttons(ui: &mut egui::Ui, style: &mut GradientStyle) -> bool {
                 paint_style_icon(p, icon, s, if on { ACCENT } else { TEXT });
                 p.rect_stroke(icon, 1.0, Stroke::new(1.0, if on { ACCENT } else { LINE }));
                 focus_ring(ui, &r, rect, 4.0);
-                if r.on_hover_text(format!("{} gradient", s.name())).clicked() && !on {
+                if r.on_hover_text(tr_args("{name} gradient", &[("name", tr(s.name()))]))
+                    .clicked()
+                    && !on
+                {
                     *style = s;
                     changed = true;
                 }
@@ -345,7 +348,10 @@ impl App {
         if swatch.clicked() {
             self.gradient.open = !self.gradient.open;
         }
-        let swatch = swatch.on_hover_text(format!("{name}: click to edit the gradient"));
+        let swatch = swatch.on_hover_text(tr_args(
+            "{name}: click to edit the gradient",
+            &[("name", name.to_string())],
+        ));
         if self.gradient.open {
             self.gradient_popover(ui.ctx(), &swatch);
         }
@@ -365,10 +371,10 @@ impl App {
         if let Some(m) = sel {
             self.gradient.blend = m;
         }
-        r.on_hover_text("How the gradient blends with the pixels under it");
+        r.on_hover_text(tr("How the gradient blends with the pixels under it"));
         let mut op = self.gradient.opacity * 100.0;
         let changed = if tier == Tier::Tight {
-            ui.label(RichText::new("Opacity").color(MUTED));
+            ui.label(RichText::new(tr("Opacity")).color(MUTED));
             let r = num_field(
                 ui,
                 egui::DragValue::new(&mut op)
@@ -393,17 +399,18 @@ impl App {
             .filter(|v| **v)
             .count();
         let mut checks = |ui: &mut egui::Ui| {
-            check(ui, &mut g.reverse, "Reverse").on_hover_text("Run the gradient the other way");
-            check(ui, &mut g.dither, "Dither")
-                .on_hover_text("Fine noise that keeps smooth ramps from banding in 8-bit exports");
-            check(ui, &mut g.transparency, "Transparency")
-                .on_hover_text("Use the stops' opacity; off paints every stop opaque");
+            check(ui, &mut g.reverse, tr("Reverse")).on_hover_text(tr("Run the gradient the other way"));
+            check(ui, &mut g.dither, tr("Dither")).on_hover_text(tr(
+                "Fine noise that keeps smooth ramps from banding in 8-bit exports",
+            ));
+            check(ui, &mut g.transparency, tr("Transparency"))
+                .on_hover_text(tr("Use the stops' opacity; off paints every stop opaque"));
         };
         if tier == Tier::Tight {
             // A tight bar folds the three switches into a menu.
             let r = ui
-                .button(format!("Options ({on})"))
-                .on_hover_text("Reverse, Dither, Transparency");
+                .button(tr_args("Options ({on})", &[("on", on.to_string())]))
+                .on_hover_text(tr("Reverse, Dither, Transparency"));
             button_menu(&r, checks);
         } else {
             checks(ui);
@@ -446,8 +453,8 @@ impl App {
                         ui.set_width(300.0);
                         ui.spacing_mut().item_spacing = egui::vec2(8.0, 6.0);
                         ui.horizontal(|ui| {
-                            ui.label(RichText::new("GRADIENT").small().strong().color(MUTED));
-                            ui.label(RichText::new(&current_name).small().color(TEXT));
+                            ui.label(RichText::new(tr("GRADIENT")).small().strong().color(MUTED));
+                            ui.label(RichText::new(tr(&current_name)).small().color(TEXT));
                         });
                         // Presets: colour-well ramps, built-ins, then the user's.
                         ui.horizontal_wrapped(|ui| {
@@ -486,8 +493,8 @@ impl App {
                             );
                             a11y_name(&r, "Preset name");
                             if ui
-                                .button("Save as preset")
-                                .on_hover_text("Keep this gradient in the preset grid")
+                                .button(tr("Save as preset"))
+                                .on_hover_text(tr("Keep this gradient in the preset grid"))
                                 .clicked()
                             {
                                 save = true;
@@ -495,8 +502,11 @@ impl App {
                         });
                         if let Some(i) = user.iter().position(|p| p.name == current_name) {
                             if ui
-                                .small_button("Delete preset")
-                                .on_hover_text(format!("Remove \"{}\" from your presets", current_name))
+                                .small_button(tr("Delete preset"))
+                                .on_hover_text(tr_args(
+                                    "Remove \"{0}\" from your presets",
+                                    &[("0", current_name.to_string())],
+                                ))
                                 .clicked()
                             {
                                 delete = Some(i);

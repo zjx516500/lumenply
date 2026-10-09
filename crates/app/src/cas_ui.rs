@@ -417,13 +417,13 @@ impl App {
             .exact_height(40.0)
             .show(ctx, |ui| {
                 ui.horizontal_centered(|ui| {
-                    ui.label(RichText::new("Content-Aware Scale").strong().color(TEXT));
-                    ui.label(RichText::new(&st.layer_name).color(MUTED));
+                    ui.label(RichText::new(tr("Content-Aware Scale")).strong().color(TEXT));
+                    ui.label(RichText::new(tr(&st.layer_name)).color(MUTED));
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         ui.label(
-                            RichText::new(
+                            RichText::new(tr(
                                 "Drag a handle to scale  ·  Shift keeps proportions  ·  drag inside to move",
-                            )
+                            ))
                             .color(MUTED),
                         );
                     });
@@ -448,7 +448,7 @@ impl App {
             )
             .show(ctx, |ui| {
                 raise_controls(ui);
-                ui.label(RichText::new("SIZE").small().strong().color(MUTED));
+                ui.label(RichText::new(tr("SIZE")).small().strong().color(MUTED));
                 ui.add_space(4.0);
                 let (mut wp, mut hp) = st.percent();
                 let field = |ui: &mut egui::Ui, v: &mut f32, name: &str| {
@@ -477,15 +477,20 @@ impl App {
                 }
                 let (_, _, w, h) = st.target();
                 ui.label(
-                    RichText::new(format!(
-                        "{} × {} px  (from {} × {})",
-                        w, h, st.src_rect.w, st.src_rect.h
+                    RichText::new(tr_args(
+                        "{0} × {1} px  (from {2} × {3})",
+                        &[
+                            ("0", w.to_string()),
+                            ("1", h.to_string()),
+                            ("2", st.src_rect.w.to_string()),
+                            ("3", st.src_rect.h.to_string()),
+                        ],
                     ))
                     .monospace()
                     .color(MUTED),
                 );
                 ui.add_space(10.0);
-                ui.label(RichText::new("AMOUNT").small().strong().color(MUTED));
+                ui.label(RichText::new(tr("AMOUNT")).small().strong().color(MUTED));
                 ui.add_space(4.0);
                 let opts = RowOpts {
                     label_w: 70.0,
@@ -494,12 +499,12 @@ impl App {
                 };
                 slider_row_ex(ui, "Amount", &mut st.amount, 0.0..=100.0, " %", opts);
                 ui.label(
-                    RichText::new("100 % carves seams only; 0 % is a plain resize")
+                    RichText::new(tr("100 % carves seams only; 0 % is a plain resize"))
                         .small()
                         .color(MUTED),
                 );
                 ui.add_space(10.0);
-                ui.label(RichText::new("PROTECT").small().strong().color(MUTED));
+                ui.label(RichText::new(tr("PROTECT")).small().strong().color(MUTED));
                 ui.add_space(4.0);
                 let name = |p: Protect| match p {
                     Protect::None => "None".to_string(),
@@ -524,13 +529,13 @@ impl App {
                     });
                 a11y_name(&r.response, "Protect");
                 r.response
-                    .on_hover_text("Seams go round this selection or saved channel");
+                    .on_hover_text(tr("Seams go round this selection or saved channel"));
                 ui.add_space(4.0);
-                check(ui, &mut st.skin, "Protect skin tones")
-                    .on_hover_text("Keep skin-coloured areas from being squeezed or stretched");
+                check(ui, &mut st.skin, tr("Protect skin tones"))
+                    .on_hover_text(tr("Keep skin-coloured areas from being squeezed or stretched"));
                 ui.add_space(10.0);
                 ui.label(
-                    RichText::new(format!("preview {:.0} ms", st.carve_ms))
+                    RichText::new(tr_args("preview {0} ms", &[("0", format!("{:.0}", st.carve_ms))]))
                         .small()
                         .color(MUTED),
                 );
@@ -538,14 +543,14 @@ impl App {
                     ui.horizontal(|ui| {
                         if ui
                             .add(primary_button("Apply"))
-                            .on_hover_text("Apply at full size (Enter)")
+                            .on_hover_text(tr("Apply at full size (Enter)"))
                             .clicked()
                         {
                             done = Some(true);
                         }
                         if ui
                             .add(footer_button("Cancel"))
-                            .on_hover_text("Leave the layer as it was (Esc)")
+                            .on_hover_text(tr("Leave the layer as it was (Esc)"))
                             .clicked()
                         {
                             done = Some(false);

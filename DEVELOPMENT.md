@@ -141,6 +141,9 @@ graph sits on render (core moves onto it in stage 3 of ADR 0025).
   macOS reads `NSEvent.pressure` through an AppKit local event monitor (installed in
   `App::new`); Linux has no source yet. `App::pen_point` routes it to `StrokePoint`
   pressure (dab size) and opacity per the Brush bar's two pen toggles (prefs).
+- UI localization lives in `crates/app/src/i18n.rs` and `crates/app/locales/`;
+  see `crates/app/locales/README.md` for adding messages and languages. Translate
+  labels at presentation boundaries; keep action ids and document data stable.
 - The bundled font is DejaVu Sans in `crates/render/fonts/` (Bitstream Vera licence).
 - The `--demo` document is built in `crates/app/src/demo.rs` from a CC0 photo
   (`crates/app/assets/NOTICE.md`); the CLI keeps the synthetic `lumenply_core::demo`.

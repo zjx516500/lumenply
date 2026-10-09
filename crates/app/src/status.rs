@@ -91,30 +91,49 @@ impl App {
         // Pixel-tight, rescanned only when the document changed (the
         // sparse tiles alone would round it up to whole 256 px tiles).
         let sel_rect = self.info_selection(ctx);
-        let message = self.status_message(ctx);
+        let message = i18n::tr_status(&self.status_message(ctx));
         egui::TopBottomPanel::bottom("status")
             .exact_height(28.0)
             .frame(bar_frame())
             .show(ctx, |ui| {
                 ui.horizontal_centered(|ui| {
                     let doc = self.editor.doc();
-                    let mono = |s: String| RichText::new(s).monospace().color(TEXT);
+                    let mono = |s: String| RichText::new(tr(s)).monospace().color(TEXT);
                     ui.label(mono(format!("{} × {} px", doc.width, doc.height)))
-                        .on_hover_text("Canvas size");
+                        .on_hover_text(tr("Canvas size"));
                     // Print resolution, the print size on hover.
                     let ppi = crate::image_size_ui::fmt_ppi(doc.resolution);
-                    ui.label(RichText::new(format!("{ppi} ppi")).color(MUTED))
-                        .on_hover_text(format!(
-                            "Prints at {} ({})",
-                            crate::image_size_ui::print_size_text(doc.width, doc.height, doc.resolution),
-                            crate::image_size_ui::print_size_cm(doc.width, doc.height, doc.resolution)
+                    ui.label(RichText::new(tr_args("{ppi} ppi", &[("ppi", ppi.to_string())])).color(MUTED))
+                        .on_hover_text(tr_args(
+                            "Prints at {0} ({1})",
+                            &[
+                                (
+                                    "0",
+                                    crate::image_size_ui::print_size_text(
+                                        doc.width,
+                                        doc.height,
+                                        doc.resolution,
+                                    )
+                                    .to_string(),
+                                ),
+                                (
+                                    "1",
+                                    crate::image_size_ui::print_size_cm(
+                                        doc.width,
+                                        doc.height,
+                                        doc.resolution,
+                                    )
+                                    .to_string(),
+                                ),
+                            ],
                         ));
                     ui.separator();
                     let at = match self.cursor_doc {
                         Some((x, y)) => format!("x {x:<5} y {y:<5}"),
                         None => "x –     y –    ".to_string(),
                     };
-                    ui.label(mono(at)).on_hover_text("Pointer position on the canvas");
+                    ui.label(mono(at))
+                        .on_hover_text(tr("Pointer position on the canvas"));
                     // Photoshop's Info readout: the composite's colour under
                     // the pointer, as 8-bit sRGB.
                     let under = self
@@ -129,44 +148,61 @@ impl App {
                         ui.painter().rect_filled(sw, 2.0, Color32::from_rgb(r, g, b));
                         ui.painter().rect_stroke(sw, 2.0, Stroke::new(1.0, LINE));
                         ui.label(mono(format!("R {r:<3} G {g:<3} B {b:<3}")))
-                            .on_hover_text(format!("Colour under the pointer: #{r:02X}{g:02X}{b:02X}"));
+                            .on_hover_text(tr_args(
+                                "Colour under the pointer: #{r}{g}{b}",
+                                &[
+                                    ("r", format!("{:02X}", r)),
+                                    ("g", format!("{:02X}", g)),
+                                    ("b", format!("{:02X}", b)),
+                                ],
+                            ));
                     }
                     ui.separator();
                     match doc.selection.as_ref().map(|_| sel_rect.unwrap_or_default()) {
                         Some(b) => {
-                            ui.label(RichText::new("Selection").color(MUTED));
+                            ui.label(RichText::new(tr("Selection")).color(MUTED));
                             ui.label(mono(format!("{} × {}", b.w, b.h)))
-                                .on_hover_text(format!("Selection bounds at {}, {}", b.x, b.y));
+                                .on_hover_text(tr_args(
+                                    "Selection bounds at {0}, {1}",
+                                    &[("0", b.x.to_string()), ("1", b.y.to_string())],
+                                ));
                         }
                         None => {
-                            ui.label(RichText::new("No selection").color(MUTED));
+                            ui.label(RichText::new(tr("No selection")).color(MUTED));
                         }
                     }
                     ui.separator();
                     let n = doc.layer_count();
                     ui.label(
-                        RichText::new(format!("{n} layer{}", if n == 1 { "" } else { "s" })).color(MUTED),
+                        RichText::new(tr_args(
+                            "{n} layer{0}",
+                            &[
+                                ("n", n.to_string()),
+                                ("0", if n == 1 { "" } else { "s" }.to_string()),
+                            ],
+                        ))
+                        .color(MUTED),
                     );
                     if self.proof_colors || self.gamut_warning {
                         ui.separator();
-                        ui.label(RichText::new(crate::soft_proof::PROOF_NOTE).color(ACCENT))
-                            .on_hover_text("View ▸ Proof colors: the canvas shows how the image prints");
+                        ui.label(RichText::new(tr(crate::soft_proof::PROOF_NOTE)).color(ACCENT))
+                            .on_hover_text(tr("View ▸ Proof colors: the canvas shows how the image prints"));
                     }
                     if self.editing_mask {
                         ui.separator();
-                        ui.label(RichText::new("Editing mask").color(ACCENT))
-                            .on_hover_text("Painting edits the layer mask: white reveals, black hides");
+                        ui.label(RichText::new(tr("Editing mask")).color(ACCENT))
+                            .on_hover_text(tr("Painting edits the layer mask: white reveals, black hides"));
                     }
                     if self.prefs.show_render_cache {
                         ui.separator();
                         ui.label(mono(render_cache_label(&self.editor)))
-                            .on_hover_text(format!(
-                                "Rendered tiles kept for reuse (Preferences ▸ Render cache: {} MB)",
-                                self.prefs.render_cache_mb
+                            .on_hover_text(tr_args(
+                                "Rendered tiles kept for reuse (Preferences ▸ Render cache: {0} MB)",
+                                &[("0", self.prefs.render_cache_mb.to_string())],
                             ));
                     }
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        ui.add(egui::Label::new(RichText::new(message).color(MUTED)).truncate());
+                        ui.add(egui::Label::new(RichText::new(tr(message)).color(MUTED)).truncate());
                     });
                 });
             });

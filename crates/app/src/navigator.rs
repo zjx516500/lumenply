@@ -36,7 +36,7 @@ pub(crate) fn pan_to_centre(view: Vec2, c: Pos2, zoom: f32) -> Vec2 {
 pub(crate) fn float_header(ui: &mut egui::Ui, title: &str, close_name: &str) -> bool {
     let mut close = false;
     ui.horizontal(|ui| {
-        ui.label(RichText::new(title).small().strong().color(MUTED));
+        ui.label(RichText::new(tr(title)).small().strong().color(MUTED));
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
             close = close_button(ui, close_name);
         });
@@ -152,7 +152,7 @@ impl App {
                         egui::WidgetInfo::labeled(
                             egui::WidgetType::Other,
                             true,
-                            "Navigator: click or drag to pan",
+                            tr("Navigator: click or drag to pan"),
                         )
                     });
                     let p = ui.painter();
@@ -190,13 +190,13 @@ impl App {
                         ui.spacing_mut().item_spacing.x = 4.0;
                         ui.spacing_mut().slider_width = 84.0;
                         let out = ui.add(
-                            egui::Button::new("−")
+                            egui::Button::new(tr("−"))
                                 .frame(false)
                                 .min_size(egui::vec2(16.0, 20.0)),
                         );
                         // Named apart from the zoom pill's buttons.
                         a11y_name(&out, "Navigator zoom out");
-                        if out.on_hover_text("Zoom out").clicked() {
+                        if out.on_hover_text(tr("Zoom out")).clicked() {
                             zoom_to = Some(crate::canvas::zoom_step(self.zoom, false));
                         }
                         let mut pct = self.zoom * 100.0;
@@ -210,12 +210,12 @@ impl App {
                             zoom_to = Some(pct / 100.0);
                         }
                         let zin = ui.add(
-                            egui::Button::new("+")
+                            egui::Button::new(tr("+"))
                                 .frame(false)
                                 .min_size(egui::vec2(16.0, 20.0)),
                         );
                         a11y_name(&zin, "Navigator zoom in");
-                        if zin.on_hover_text("Zoom in").clicked() {
+                        if zin.on_hover_text(tr("Zoom in")).clicked() {
                             zoom_to = Some(crate::canvas::zoom_step(self.zoom, true));
                         }
                         let mut typed = self.zoom * 100.0;

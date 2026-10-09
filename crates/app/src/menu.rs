@@ -251,11 +251,11 @@ impl App {
                     // The mark, top-left; click for About.
                     let (chip, resp) = ui.allocate_exact_size(egui::vec2(26.0, 26.0), Sense::click());
                     resp.widget_info(|| {
-                        egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "About Lumenply")
+                        egui::WidgetInfo::labeled(egui::WidgetType::Button, true, tr("About Lumenply"))
                     });
                     ui.painter().rect_filled(chip, 7.0, GROUND);
                     brand::paint_mark(ui.painter(), chip.shrink(4.0), TEXT, ACCENT, GROUND);
-                    if resp.on_hover_text("About Lumenply").clicked() {
+                    if resp.on_hover_text(tr("About Lumenply")).clicked() {
                         self.dialog = Some(Dialog::About);
                     }
                     ui.add_space(2.0);
@@ -268,6 +268,15 @@ impl App {
                     menu(ui, "View", |ui| self.view_menu(ui));
                     menu(ui, "Window", |ui| self.window_menu(ui));
                     menu(ui, "Help", |ui| self.help_menu(ui));
+                    menu(ui, "Language", |ui| {
+                        for language in i18n::Language::ALL {
+                            if menu_check(ui, self.prefs.language == language, language.native_name(), "")
+                                .clicked()
+                            {
+                                self.set_language(ctx, language);
+                            }
+                        }
+                    });
 
                     ui.add_space(10.0);
                     // The tabs scroll sideways rather than push the Export
@@ -288,7 +297,7 @@ impl App {
 
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         let export = ui.add(
-                            egui::Button::new(RichText::new("Export").color(ACCENT_INK).strong())
+                            egui::Button::new(RichText::new(tr("Export")).color(ACCENT_INK).strong())
                                 .fill(ACCENT),
                         );
                         note_target(ui.ctx(), "export-button", export.rect);
@@ -299,9 +308,9 @@ impl App {
                         let keys = self.action_keys(ui.ctx(), "palette");
                         let room = ui.available_width() - 8.0;
                         let search = if room >= 230.0 {
-                            Some((format!("Search tools, filters...   {keys}"), 230.0))
+                            Some((format!("{}   {keys}", tr("Search tools, filters...")), 230.0))
                         } else if room >= 140.0 {
-                            Some((format!("Search...   {keys}"), room))
+                            Some((format!("{}   {keys}", tr("Search...")), room))
                         } else if room >= 64.0 {
                             Some((keys.clone(), room.min(80.0)))
                         } else {
@@ -309,15 +318,18 @@ impl App {
                         };
                         if let Some((label, w)) = search {
                             let r = ui.add(
-                                egui::Button::new(RichText::new(label).color(MUTED))
+                                egui::Button::new(RichText::new(tr(label)).color(MUTED))
                                     .fill(GROUND)
                                     .stroke(Stroke::new(1.0, LINE))
                                     .min_size(egui::vec2(w, 26.0)),
                             );
                             // One name however short the label gets.
                             a11y_name(&r, "Search tools, filters and commands");
-                            if r.on_hover_text(format!("Search tools, filters and commands ({keys})"))
-                                .clicked()
+                            if r.on_hover_text(tr_args(
+                                "Search tools, filters and commands ({keys})",
+                                &[("keys", keys.clone())],
+                            ))
+                            .clicked()
                             {
                                 self.toggle_palette();
                             }
@@ -336,7 +348,7 @@ impl App {
         let keys = self.action_keys(&ctx, id);
         let r = menu_item_response(ui, block.is_none(), label, &keys);
         let r = match block {
-            Some(why) => r.on_disabled_hover_text(why),
+            Some(why) => r.on_disabled_hover_text(tr(why)),
             None => r,
         };
         if r.clicked() {
@@ -410,11 +422,11 @@ impl App {
     fn edit_menu(&mut self, ui: &mut egui::Ui) {
         // Name the step, as the history strip does.
         let undo = match self.editor.history().last() {
-            Some(l) => format!("Undo {l}"),
+            Some(l) => tr_args("Undo {action}", &[("action", i18n::tr_history(l))]),
             None => "Undo".into(),
         };
         let redo = match self.editor.redo_history().first() {
-            Some(l) => format!("Redo {l}"),
+            Some(l) => tr_args("Redo {action}", &[("action", i18n::tr_history(l))]),
             None => "Redo".into(),
         };
         self.act(ui, &undo, "undo");
@@ -468,10 +480,10 @@ impl App {
         menu_separator(ui);
         let float = self.editor.doc().float_mode;
         self.act_check(ui, "32-bit float (HDR)", "float-mode", float)
-            .on_hover_text(
+            .on_hover_text(tr(
                 "Keep values outside 0–1 through every edit (HDR). Off, tiles \
                  return to 16-bit as they are next edited, clamping the range",
-            );
+            ));
     }
 
     fn select_menu(&mut self, ui: &mut egui::Ui) {
@@ -484,7 +496,7 @@ impl App {
         self.act(ui, "Subject", crate::ai_ui::SELECT_SUBJECT);
         let quick = self.quick_mask;
         self.act_check(ui, "Quick mask", "quick-mask", quick)
-            .on_hover_text("Paint the selection: white selects, black deselects");
+            .on_hover_text(tr("Paint the selection: white selects, black deselects"));
         self.act(ui, "Select and Mask...", "select-mask");
         menu_separator(ui);
         menu(ui, "Modify", |ui| {
@@ -648,7 +660,7 @@ impl App {
         for cat in ["Blur", "Noise", "Pixelate", "Sharpen", "Stylize", "Other"] {
             menu(ui, cat, |ui| {
                 for (name, f) in presets.iter().filter(|(_, f)| filter_category(f) == cat) {
-                    self.act(ui, &format!("{name}..."), palette::filter_id(f));
+                    self.act(ui, &format!("{}...", tr(*name)), palette::filter_id(f));
                 }
             });
         }
@@ -750,11 +762,11 @@ impl App {
                     name.clone()
                 },
             );
-            let resp = resp.on_hover_text(if unsaved {
+            let resp = resp.on_hover_text(tr(if unsaved {
                 "Unsaved changes — middle-click closes"
             } else {
                 "Middle-click closes"
-            });
+            }));
             if resp.clicked() && !live {
                 switch = Some(i);
             }
@@ -765,23 +777,23 @@ impl App {
                 // A visible close affordance on the active tab only, to
                 // keep the strip quiet.
                 let x = ui.add(
-                    egui::Button::new(RichText::new("×").color(MUTED))
+                    egui::Button::new(RichText::new(tr("×")).color(MUTED))
                         .fill(Color32::TRANSPARENT)
                         .frame(false),
                 );
                 a11y_name(&x, "Close document");
-                if x.on_hover_text("Close document").clicked() {
+                if x.on_hover_text(tr("Close document")).clicked() {
                     close = Some(i);
                 }
             }
         }
         let plus = ui.add(
-            egui::Button::new(RichText::new("+").color(MUTED))
+            egui::Button::new(RichText::new(tr("+")).color(MUTED))
                 .fill(Color32::TRANSPARENT)
                 .frame(false),
         );
         a11y_name(&plus, "New document (tab)");
-        if plus.on_hover_text("New document (tab)").clicked() {
+        if plus.on_hover_text(tr("New document (tab)")).clicked() {
             self.dialog = Some(Dialog::New(1920, 1080, 72.0));
         }
         if let Some(i) = switch {

@@ -66,6 +66,8 @@ Legend: `[x]` done and tested · `[~]` done but unverified or partial · `[ ]` n
       Unicode names, merged preview; 8 adjustment types both ways; validated with psd-tools (ADR 0003)
 
 ### Desktop app (crates/app, egui 0.29)
+- [x] English / Simplified Chinese interface: Language menu, immediate switching,
+      saved preference, shared translation catalogue and bundled Chinese font
 - [x] Menus: File, Edit, Image, Select, Layer, Filter, View
 - [x] 14 tools: Move, Rect/Ellipse marquee, Lasso, Polygonal lasso, Magic wand, Brush, Eraser,
       Clone stamp, Paint bucket, Gradient, Text, Eyedropper, Hand

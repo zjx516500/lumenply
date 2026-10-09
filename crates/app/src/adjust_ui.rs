@@ -119,7 +119,10 @@ pub(crate) fn gradient_editor_opts(
         egui::WidgetInfo::labeled(
             egui::WidgetType::Other,
             true,
-            format!("Gradient, {n} stops: click to add a stop, drag a stop away to remove it"),
+            tr_args(
+                "Gradient, {n} stops: click to add a stop, drag a stop away to remove it",
+                &[("n", n.to_string())],
+            ),
         )
     });
     let strip = egui::Rect::from_min_size(
@@ -241,7 +244,11 @@ pub(crate) fn gradient_editor_opts(
         let mut srgb = g.stops[sel].color.map(linear_to_srgb_f);
         let hex = format_hex(srgb);
         sresp.widget_info(|| {
-            egui::WidgetInfo::labeled(egui::WidgetType::ColorButton, true, format!("Stop colour {hex}"))
+            egui::WidgetInfo::labeled(
+                egui::WidgetType::ColorButton,
+                true,
+                tr_args("Stop colour {hex}", &[("hex", hex.to_string())]),
+            )
         });
         let popup = swatch_id.with("color-picker");
         if open_picker {
@@ -263,7 +270,7 @@ pub(crate) fn gradient_editor_opts(
         let sresp = if open {
             sresp
         } else {
-            sresp.on_hover_text(format!("{hex}  ·  click to edit"))
+            sresp.on_hover_text(tr_args("{hex}  ·  click to edit", &[("hex", hex.to_string())]))
         };
         let e = picker_popup(ui, &sresp, popup, Some("Stop colour"), &mut srgb, Placement::Auto);
         if e.changed {
@@ -274,9 +281,9 @@ pub(crate) fn gradient_editor_opts(
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
             let can = g.stops.len() > 2;
             let rm = ui
-                .add_enabled(can, egui::Button::new(RichText::new("Remove").small()))
-                .on_hover_text("Remove this stop")
-                .on_disabled_hover_text("A gradient needs at least two stops");
+                .add_enabled(can, egui::Button::new(RichText::new(tr("Remove")).small()))
+                .on_hover_text(tr("Remove this stop"))
+                .on_disabled_hover_text(tr("A gradient needs at least two stops"));
             if rm.clicked() {
                 g.stops.remove(sel);
                 st.selected = 0;
@@ -408,7 +415,7 @@ impl App {
                 let current = style.name();
                 combo_row(ui, "Style", ("fill-style", id), current, |ui| {
                     for s in GradientStyle::ALL {
-                        if ui.selectable_label(*style == s, s.name()).clicked() {
+                        if ui.selectable_label(*style == s, tr(s.name())).clicked() {
                             *style = s;
                             finished = true;
                         }
@@ -421,7 +428,7 @@ impl App {
                 // would change the gradient and add an undo step.
                 let range = scale.min(0.1)..=scale.max(1.5);
                 finished |= slider_row_scaled(ui, "Scale", scale, range, 100.0, "%");
-                if check(ui, reverse, "Reverse").changed() {
+                if check(ui, reverse, tr("Reverse")).changed() {
                     finished = true;
                 }
             }
@@ -436,7 +443,7 @@ impl App {
             self.editor.end_coalescing();
         }
         ui.label(
-            RichText::new("Covers the canvas; mask it to shape it.")
+            RichText::new(tr("Covers the canvas; mask it to shape it."))
                 .small()
                 .color(MUTED),
         );
@@ -642,7 +649,7 @@ fn combo_row(
         row_label(ui, label, LABEL_W);
         ui.spacing_mut().combo_width = ui.available_width();
         let r = egui::ComboBox::from_id_salt(salt)
-            .selected_text(text)
+            .selected_text(tr(text))
             .show_ui(ui, |ui| {
                 popup_style(ui);
                 add(ui);
@@ -719,11 +726,11 @@ pub(crate) fn adjustment_ui(ui: &mut egui::Ui, layer: LayerId, adj: &mut Adjustm
         Adjustment::GradientMap { gradient, reverse } => {
             let e = gradient_editor(ui, layer, gradient, false);
             finished |= e.finished;
-            if check(ui, reverse, "Reverse").changed() {
+            if check(ui, reverse, tr("Reverse")).changed() {
                 finished = true;
             }
             ui.label(
-                RichText::new("Shadows take the left of the ramp, highlights the right.")
+                RichText::new(tr("Shadows take the left of the ramp, highlights the right."))
                     .small()
                     .color(MUTED),
             );
@@ -738,7 +745,7 @@ pub(crate) fn adjustment_ui(ui: &mut egui::Ui, layer: LayerId, adj: &mut Adjustm
             let current = mixer_preset_name(red, green, blue, *monochrome, gray);
             combo_row(ui, "Preset", ("mixer-preset", layer), current, |ui| {
                 for (name, row) in mixer_presets() {
-                    if ui.selectable_label(name == current, name).clicked() {
+                    if ui.selectable_label(name == current, tr(name)).clicked() {
                         match row {
                             None => {
                                 *red = [1.0, 0.0, 0.0, 0.0];
@@ -766,7 +773,7 @@ pub(crate) fn adjustment_ui(ui: &mut egui::Ui, layer: LayerId, adj: &mut Adjustm
             } else {
                 ui.horizontal(|ui| {
                     row_label(ui, "Output", LABEL_W);
-                    ui.label(RichText::new("Gray").color(TEXT));
+                    ui.label(RichText::new(tr("Gray")).color(TEXT));
                 });
             }
             let row = if *monochrome {
@@ -787,9 +794,9 @@ pub(crate) fn adjustment_ui(ui: &mut egui::Ui, layer: LayerId, adj: &mut Adjustm
                 row_label(ui, "Total", LABEL_W);
                 let c = if total > 100.0 { ACCENT } else { MUTED };
                 ui.label(RichText::new(format!("{total:+.0}%")).monospace().color(c))
-                    .on_hover_text("Above +100% the channel can clip");
+                    .on_hover_text(tr("Above +100% the channel can clip"));
             });
-            if check(ui, monochrome, "Monochrome").changed() {
+            if check(ui, monochrome, tr("Monochrome")).changed() {
                 finished = true;
             }
         }
@@ -805,7 +812,7 @@ pub(crate) fn adjustment_ui(ui: &mut egui::Ui, layer: LayerId, adj: &mut Adjustm
                 .map_or("Custom", |(n, _)| n);
             combo_row(ui, "Filter", ("photo-filter", layer), current, |ui| {
                 for (name, c) in PHOTO_FILTERS {
-                    if ui.selectable_label(name == current, name).clicked() {
+                    if ui.selectable_label(name == current, tr(name)).clicked() {
                         *color = c.map(|v| srgb_to_linear_f(v as f32 / 255.0));
                         finished = true;
                     }
@@ -821,7 +828,7 @@ pub(crate) fn adjustment_ui(ui: &mut egui::Ui, layer: LayerId, adj: &mut Adjustm
                 finished |= r.drag_stopped() || (r.changed() && !r.dragged());
             });
             finished |= slider_row_scaled(ui, "Density", density, 0.0..=1.0, 100.0, "%");
-            if check(ui, preserve_luminosity, "Preserve luminosity").changed() {
+            if check(ui, preserve_luminosity, tr("Preserve luminosity")).changed() {
                 finished = true;
             }
         }
@@ -841,7 +848,7 @@ pub(crate) fn adjustment_ui(ui: &mut egui::Ui, layer: LayerId, adj: &mut Adjustm
                         } else {
                             (*name).to_string()
                         };
-                        ui.selectable_value(&mut fam, i, label);
+                        ui.selectable_value(&mut fam, i, tr(label));
                     }
                 },
             );

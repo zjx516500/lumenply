@@ -135,13 +135,13 @@ impl App {
             bar_separator(ui);
             self.new_text_button(ui);
             if self.text_editing() {
-                let r = chip(ui, false, RichText::new("Cancel"), 0.0)
-                    .on_hover_text("Put the text back as it was before this edit");
+                let r = chip(ui, false, RichText::new(tr("Cancel")), 0.0)
+                    .on_hover_text(tr("Put the text back as it was before this edit"));
                 if r.clicked() {
                     self.cancel_text_edit();
                 }
-                let r = chip(ui, true, RichText::new("Commit"), 0.0)
-                    .on_hover_text("Finish editing the text (Esc or Cmd+Enter)");
+                let r = chip(ui, true, RichText::new(tr("Commit")), 0.0)
+                    .on_hover_text(tr("Finish editing the text (Esc or Cmd+Enter)"));
                 if r.clicked() {
                     self.commit_text_edit();
                 }
@@ -164,7 +164,7 @@ impl App {
             bar_separator(ui);
             self.new_text_button(ui);
             if self.text_new_armed {
-                if ui.button("Cancel").clicked() {
+                if ui.button(tr("Cancel")).clicked() {
                     self.text_new_armed = false;
                 }
                 hint_full = "Click on the canvas to place the new text, or drag a text box";
@@ -183,7 +183,7 @@ impl App {
         let hint = [hint_full, hint_short].into_iter().find(|s| fits(s));
         if let Some(hint) = hint {
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                ui.label(RichText::new(hint).color(MUTED));
+                ui.label(RichText::new(tr(hint)).color(MUTED));
             });
         }
     }
@@ -191,9 +191,9 @@ impl App {
     /// "New text": arm the tool so the next click starts a new layer in
     /// the current style, whatever lies under it.
     fn new_text_button(&mut self, ui: &mut egui::Ui) {
-        let r = chip(ui, self.text_new_armed, RichText::new("New text"), 0.0).on_hover_text(
+        let r = chip(ui, self.text_new_armed, RichText::new(tr("New text")), 0.0).on_hover_text(tr(
             "Start a new text layer: the next canvas click places it (Shift+click does the same)",
-        );
+        ));
         if r.clicked() {
             if self.text_new_armed {
                 self.text_new_armed = false;
@@ -213,8 +213,10 @@ impl App {
             section_title(ui, "TEXT");
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 rasterize = ui
-                    .add(egui::Button::new(RichText::new("Rasterize").small().color(MUTED)).frame(false))
-                    .on_hover_text("Turn this text into ordinary pixels (no longer editable as text)")
+                    .add(egui::Button::new(RichText::new(tr("Rasterize")).small().color(MUTED)).frame(false))
+                    .on_hover_text(tr(
+                        "Turn this text into ordinary pixels (no longer editable as text)",
+                    ))
                     .clicked();
             });
         });
@@ -225,7 +227,7 @@ impl App {
         let r = field_style(ui, |ui| {
             ui.add(
                 egui::TextEdit::multiline(&mut t.text)
-                    .hint_text("Type your text")
+                    .hint_text(tr("Type your text"))
                     .desired_rows(2)
                     .desired_width(f32::INFINITY),
             )
@@ -239,9 +241,12 @@ impl App {
         if !font_is_available(&t.font) {
             row(ui, "", |ui| {
                 ui.label(
-                    RichText::new(format!("Not installed: shown in {BUNDLED_FAMILY}"))
-                        .small()
-                        .color(WARN),
+                    RichText::new(tr_args(
+                        "Not installed: shown in {BUNDLED_FAMILY}",
+                        &[("BUNDLED_FAMILY", BUNDLED_FAMILY.to_string())],
+                    ))
+                    .small()
+                    .color(WARN),
                 );
             });
         }
@@ -274,8 +279,8 @@ impl App {
                 ),
                 (false, "Off", "Whole-pixel advances without kerning pairs"),
             ] {
-                if chip(ui, t.kerning == on, RichText::new(label), 0.0)
-                    .on_hover_text(tip)
+                if chip(ui, t.kerning == on, RichText::new(tr(label)), 0.0)
+                    .on_hover_text(tr(tip))
                     .clicked()
                     && t.kerning != on
                 {
@@ -295,15 +300,15 @@ impl App {
         let mut convert = None;
         row(ui, "Type", |ui| {
             let paragraph = t.box_size.is_some();
-            if chip(ui, !paragraph, RichText::new("Point"), 0.0)
-                .on_hover_text("One line per return; the anchor sits on the first baseline")
+            if chip(ui, !paragraph, RichText::new(tr("Point")), 0.0)
+                .on_hover_text(tr("One line per return; the anchor sits on the first baseline"))
                 .clicked()
                 && paragraph
             {
                 convert = Some(lumenply_render::text_layout::to_point(&before));
             }
-            if chip(ui, paragraph, RichText::new("Paragraph"), 0.0)
-                .on_hover_text("Lines wrap inside a box; drag its handles while editing")
+            if chip(ui, paragraph, RichText::new(tr("Paragraph")), 0.0)
+                .on_hover_text(tr("Lines wrap inside a box; drag its handles while editing"))
                 .clicked()
                 && !paragraph
             {
@@ -313,7 +318,7 @@ impl App {
         if let Some([w, h]) = t.box_size.as_mut() {
             row(ui, "Box", |ui| {
                 let rw = value_field(ui, "Box width", w, 8.0..=20000.0, " px", 70.0);
-                ui.label(RichText::new("\u{00D7}").color(MUTED));
+                ui.label(RichText::new(tr("\u{00D7}")).color(MUTED));
                 let rh = value_field(ui, "Box height", h, 8.0..=20000.0, " px", 70.0);
                 finished |= edit_finished(&rw) || edit_finished(&rh);
             });
@@ -442,7 +447,7 @@ fn edit_finished(r: &egui::Response) -> bool {
 }
 
 fn muted(ui: &mut egui::Ui, text: &str) {
-    ui.label(RichText::new(text).color(MUTED));
+    ui.label(RichText::new(tr(text)).color(MUTED));
 }
 
 fn bar_separator(ui: &mut egui::Ui) {
@@ -454,7 +459,10 @@ fn bar_separator(ui: &mut egui::Ui) {
 /// A labelled Properties row: muted 70 px label, then the contents.
 fn row<R>(ui: &mut egui::Ui, label: &str, add: impl FnOnce(&mut egui::Ui) -> R) -> R {
     ui.horizontal(|ui| {
-        ui.add_sized([70.0, 18.0], egui::Label::new(RichText::new(label).color(MUTED)));
+        ui.add_sized(
+            [70.0, 18.0],
+            egui::Label::new(RichText::new(tr(label)).color(MUTED)),
+        );
         add(ui)
     })
     .inner
@@ -533,23 +541,23 @@ fn style_toggles(ui: &mut egui::Ui, bold: &mut bool, italic: &mut bool, caps: Op
     ui.scope(|ui| {
         ui.spacing_mut().item_spacing.x = 4.0;
         ui.spacing_mut().button_padding.x = 4.0;
-        let b = RichText::new("B").family(egui::FontFamily::Name("semibold".into()));
-        let r = chip(ui, *bold, b, 28.0).on_hover_text("Bold");
+        let b = RichText::new(tr("B")).family(egui::FontFamily::Name("semibold".into()));
+        let r = chip(ui, *bold, b, 28.0).on_hover_text(tr("Bold"));
         a11y_name(&r, "Bold");
         if r.clicked() {
             *bold = !*bold;
             changed = true;
         }
-        let r = chip(ui, *italic, RichText::new("I").italics(), 28.0)
-            .on_hover_text("Italic (slanted automatically when the font has no italic)");
+        let r = chip(ui, *italic, RichText::new(tr("I")).italics(), 28.0)
+            .on_hover_text(tr("Italic (slanted automatically when the font has no italic)"));
         a11y_name(&r, "Italic");
         if r.clicked() {
             *italic = !*italic;
             changed = true;
         }
         if let Some(caps) = caps {
-            let r = chip(ui, *caps, RichText::new("TT").size(11.0), 28.0)
-                .on_hover_text("All caps (the text keeps its own case underneath)");
+            let r = chip(ui, *caps, RichText::new(tr("TT")).size(11.0), 28.0)
+                .on_hover_text(tr("All caps (the text keeps its own case underneath)"));
             a11y_name(&r, "All caps");
             if r.clicked() {
                 *caps = !*caps;
@@ -567,8 +575,8 @@ fn line_toggles(ui: &mut egui::Ui, underline: &mut bool, strike: &mut bool) -> b
         ui.spacing_mut().item_spacing.x = 4.0;
         ui.spacing_mut().button_padding.x = 4.0;
         for (v, text, name) in [
-            (underline, RichText::new("U").underline(), "Underline"),
-            (strike, RichText::new("S").strikethrough(), "Strikethrough"),
+            (underline, RichText::new(tr("U")).underline(), "Underline"),
+            (strike, RichText::new(tr("S")).strikethrough(), "Strikethrough"),
         ] {
             let r = chip(ui, *v, text, 28.0).on_hover_text(name);
             a11y_name(&r, name);
@@ -597,10 +605,10 @@ fn align_toggles(ui: &mut egui::Ui, align: &mut TextAlign, paragraph: bool) -> b
             let enabled = paragraph || a != TextAlign::Justify;
             let on = *align == a;
             let r = ui
-                .add_enabled_ui(enabled, |ui| chip(ui, on, RichText::new(""), 28.0))
+                .add_enabled_ui(enabled, |ui| chip(ui, on, RichText::new(tr("")), 28.0))
                 .inner
-                .on_hover_text(tip)
-                .on_disabled_hover_text("Justify needs paragraph text: drag a box with the Text tool");
+                .on_hover_text(tr(tip))
+                .on_disabled_hover_text(tr("Justify needs paragraph text: drag a box with the Text tool"));
             a11y_name(&r, tip);
             // Three lines of a paragraph, ragged on the free side.
             let c = r.rect.center();
@@ -637,8 +645,9 @@ fn align_toggles(ui: &mut egui::Ui, align: &mut TextAlign, paragraph: bool) -> b
 /// Leading (line spacing) in pixels, stored as a multiple of the size.
 fn leading_field(ui: &mut egui::Ui, t: &mut TextLayer, width: f32) -> bool {
     let mut px = t.line_height * t.size;
-    let r = value_field(ui, "Leading", &mut px, 1.0..=2000.0, "", width)
-        .on_hover_text("Leading: the distance from one baseline to the next, in pixels");
+    let r = value_field(ui, "Leading", &mut px, 1.0..=2000.0, "", width).on_hover_text(tr(
+        "Leading: the distance from one baseline to the next, in pixels",
+    ));
     if r.changed() && t.size > 0.0 {
         t.line_height = (px / t.size).clamp(0.5, 10.0);
     }
@@ -652,7 +661,7 @@ fn text_color_button(ui: &mut egui::Ui, color: &mut [f32; 4]) -> bool {
         lumenply_io::linear_to_srgb(color[1]) as f32 / 255.0,
         lumenply_io::linear_to_srgb(color[2]) as f32 / 255.0,
     ];
-    let r = crate::color_picker::color_edit_button_rgb(ui, &mut rgb).on_hover_text("Text colour");
+    let r = crate::color_picker::color_edit_button_rgb(ui, &mut rgb).on_hover_text(tr("Text colour"));
     a11y_name(
         &r,
         &format!("Text colour {}", crate::color_picker::format_hex(rgb)),
@@ -676,7 +685,10 @@ fn value_slider_row(
 ) -> bool {
     let mut finished = false;
     ui.horizontal(|ui| {
-        ui.add_sized([70.0, 18.0], egui::Label::new(RichText::new(label).color(MUTED)));
+        ui.add_sized(
+            [70.0, 18.0],
+            egui::Label::new(RichText::new(tr(label)).color(MUTED)),
+        );
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
             ui.add_sized(
                 [58.0, 18.0],
@@ -768,13 +780,13 @@ pub(crate) fn font_picker(ui: &mut egui::Ui, salt: &str, font: &mut String, widt
         );
     }
     let resp = if available {
-        resp.on_hover_text("Font family: click to search the installed fonts")
+        resp.on_hover_text(tr("Font family: click to search the installed fonts"))
     } else {
-        resp.on_hover_text(format!(
+        resp.on_hover_text(tr(format!(
             "\u{201C}{}\u{201D} is not installed on this computer, so this text is shown in \
              {BUNDLED_FAMILY}. Install the font or pick another one.",
             font_display_name(font)
-        ))
+        )))
     };
     if resp.clicked() {
         if !open {
@@ -800,7 +812,7 @@ pub(crate) fn font_picker(ui: &mut egui::Ui, salt: &str, font: &mut String, widt
             let sr = field_style(ui, |ui| {
                 ui.add(
                     egui::TextEdit::singleline(&mut q)
-                        .hint_text("Search fonts")
+                        .hint_text(tr("Search fonts"))
                         .desired_width(f32::INFINITY),
                 )
             });
@@ -832,8 +844,11 @@ pub(crate) fn font_picker(ui: &mut egui::Ui, salt: &str, font: &mut String, widt
             ui.add_space(2.0);
             if entries.is_empty() {
                 ui.label(
-                    RichText::new(format!("No installed font matches \u{201C}{}\u{201D}", q.trim()))
-                        .color(MUTED),
+                    RichText::new(tr(format!(
+                        "No installed font matches \u{201C}{}\u{201D}",
+                        q.trim()
+                    )))
+                    .color(MUTED),
                 );
             } else {
                 let row_h = ui.spacing().interact_size.y;
@@ -854,7 +869,7 @@ pub(crate) fn font_picker(ui: &mut egui::Ui, salt: &str, font: &mut String, widt
                         // Full-width rows, names left-aligned.
                         let r = ui
                             .with_layout(egui::Layout::top_down_justified(egui::Align::LEFT), |ui| {
-                                ui.add(egui::SelectableLabel::new(on, *label))
+                                ui.add(egui::SelectableLabel::new(on, tr(*label)))
                             })
                             .inner;
                         if r.clicked() {
@@ -871,7 +886,7 @@ pub(crate) fn font_picker(ui: &mut egui::Ui, salt: &str, font: &mut String, widt
             } else {
                 format!("{} of {total} fonts", entries.len())
             };
-            ui.label(RichText::new(note).small().color(MUTED));
+            ui.label(RichText::new(tr(note)).small().color(MUTED));
 
             if let Some(v) = pick {
                 if v != *font {

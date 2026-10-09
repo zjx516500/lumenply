@@ -72,10 +72,10 @@ impl App {
             row_label(ui, "Look", LABEL_W);
             ui.spacing_mut().combo_width = ui.available_width();
             let r = egui::ComboBox::from_id_salt(("lut-look", id))
-                .selected_text(shown)
+                .selected_text(tr(shown))
                 .show_ui(ui, |ui| {
                     popup_style(ui);
-                    if ui.selectable_label(none, "None").clicked() {
+                    if ui.selectable_label(none, tr("None")).clicked() {
                         *lut = Arc::new(Lut3D::identity(2));
                         name.clear();
                         finished = true;
@@ -92,9 +92,9 @@ impl App {
         });
         ui.horizontal(|ui| {
             row_label(ui, "3D LUT file", LABEL_W);
-            let b = ui
-                .button("Load 3D LUT…")
-                .on_hover_text("Load a .cube or .3dl file; the table is saved inside the document");
+            let b = ui.button(tr("Load 3D LUT…")).on_hover_text(tr(
+                "Load a .cube or .3dl file; the table is saved inside the document",
+            ));
             if b.clicked() {
                 if let Some((l, n)) = self.pick_lut_file() {
                     *lut = l;

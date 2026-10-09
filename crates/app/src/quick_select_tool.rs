@@ -123,8 +123,8 @@ impl App {
         if bar_slider(ui, "Size", &mut size, 2.0..=600.0, " px", true) {
             self.quick.radius = size / 2.0;
         }
-        check(ui, &mut self.sample_merged, "All layers")
-            .on_hover_text("Sample the merged image instead of the active layer only");
+        check(ui, &mut self.sample_merged, tr("All layers"))
+            .on_hover_text(tr("Sample the merged image instead of the active layer only"));
     }
 
     /// Magic Wand / Quick Selection / Object Selection, as the first

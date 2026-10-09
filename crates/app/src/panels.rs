@@ -202,7 +202,7 @@ pub(crate) fn rename_field(
 pub(crate) fn close_button(ui: &mut egui::Ui, name: &str) -> bool {
     let (rect, resp) = ui.allocate_exact_size(Vec2::splat(18.0), Sense::click());
     let n = name.to_string();
-    resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, &n));
+    resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, tr(&n)));
     if resp.hovered() || resp.has_focus() {
         ui.painter().rect_filled(rect, 4.0, HOVER);
     }
@@ -339,7 +339,7 @@ impl App {
             let on = self.prefs.panels.tab == tab;
             let font = FontId::proportional(13.5);
             let ink = if on { TEXT } else { MUTED };
-            let galley = ui.painter().layout_no_wrap(tab.name().into(), font, ink);
+            let galley = ui.painter().layout_no_wrap(tr(tab.name()), font, ink);
             let w = galley.size().x + 22.0;
             let r = egui::Rect::from_min_size(egui::pos2(x, strip.min.y + 2.0), egui::vec2(w, TABS_H - 6.0));
             let resp = ui.interact(r, egui::Id::new(("dock-tab", tab.name())), Sense::click());
@@ -348,7 +348,7 @@ impl App {
                     egui::WidgetType::SelectableLabel,
                     true,
                     on,
-                    format!("{} panel", tab.name()),
+                    tr_args("{name} panel", &[("name", tr(tab.name()))]),
                 )
             });
             note_target(ui.ctx(), &format!("tab-{}", tab.name()), r);

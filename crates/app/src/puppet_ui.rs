@@ -355,13 +355,13 @@ impl App {
             .exact_height(40.0)
             .show(ctx, |ui| {
                 ui.horizontal_centered(|ui| {
-                    ui.label(RichText::new("Puppet Warp").strong().color(TEXT));
-                    ui.label(RichText::new(&st.layer_name).color(MUTED));
+                    ui.label(RichText::new(tr("Puppet Warp")).strong().color(TEXT));
+                    ui.label(RichText::new(tr(&st.layer_name)).color(MUTED));
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         ui.label(
-                            RichText::new(
+                            RichText::new(tr(
                                 "Click to pin  ·  drag a pin to warp  ·  Alt-click or Delete removes",
-                            )
+                            ))
                             .color(MUTED),
                         );
                     });
@@ -378,14 +378,14 @@ impl App {
             )
             .show(ctx, |ui| {
                 raise_controls(ui);
-                ui.label(RichText::new("MODE").small().strong().color(MUTED));
+                ui.label(RichText::new(tr("MODE")).small().strong().color(MUTED));
                 ui.add_space(4.0);
                 let modes: Vec<(PuppetMode, &str)> = PuppetMode::ALL.iter().map(|m| (*m, m.name())).collect();
                 if segmented(ui, &mut st.mode, &modes) {
                     st.resolve();
                 }
                 ui.add_space(10.0);
-                ui.label(RichText::new("DENSITY").small().strong().color(MUTED));
+                ui.label(RichText::new(tr("DENSITY")).small().strong().color(MUTED));
                 ui.add_space(4.0);
                 let dens = [
                     (PuppetDensity::Fewer, "Fewer"),
@@ -407,31 +407,31 @@ impl App {
                     st.remesh();
                 }
                 ui.add_space(10.0);
-                ui.label(RichText::new("VIEW").small().strong().color(MUTED));
+                ui.label(RichText::new(tr("VIEW")).small().strong().color(MUTED));
                 ui.add_space(4.0);
-                check(ui, &mut st.show_mesh, "Show mesh");
+                check(ui, &mut st.show_mesh, tr("Show mesh"));
                 ui.add_space(10.0);
-                ui.label(RichText::new("PINS").small().strong().color(MUTED));
+                ui.label(RichText::new(tr("PINS")).small().strong().color(MUTED));
                 ui.add_space(4.0);
                 ui.horizontal(|ui| {
                     let sel = st.selected.is_some();
                     if ui
-                        .add_enabled(sel, egui::Button::new("Depth +"))
-                        .on_hover_text("The selected pin's part draws on top where the mesh overlaps")
+                        .add_enabled(sel, egui::Button::new(tr("Depth +")))
+                        .on_hover_text(tr("The selected pin's part draws on top where the mesh overlaps"))
                         .clicked()
                     {
                         st.shift_depth(1);
                     }
                     if ui
-                        .add_enabled(sel, egui::Button::new("Depth −"))
-                        .on_hover_text("The selected pin's part draws underneath")
+                        .add_enabled(sel, egui::Button::new(tr("Depth −")))
+                        .on_hover_text(tr("The selected pin's part draws underneath"))
                         .clicked()
                     {
                         st.shift_depth(-1);
                     }
                     if ui
-                        .add_enabled(sel, egui::Button::new("Remove"))
-                        .on_hover_text("Remove the selected pin (Delete)")
+                        .add_enabled(sel, egui::Button::new(tr("Remove")))
+                        .on_hover_text(tr("Remove the selected pin (Delete)"))
                         .clicked()
                     {
                         if let Some(k) = st.selected {
@@ -441,15 +441,15 @@ impl App {
                 });
                 ui.horizontal(|ui| {
                     if ui
-                        .add_enabled(!st.pins.is_empty(), egui::Button::new("Remove all pins"))
-                        .on_hover_text("Back to the unwarped layer (Cmd+Z brings the pins back)")
+                        .add_enabled(!st.pins.is_empty(), egui::Button::new(tr("Remove all pins")))
+                        .on_hover_text(tr("Back to the unwarped layer (Cmd+Z brings the pins back)"))
                         .clicked()
                     {
                         st.clear_pins();
                     }
                     if ui
-                        .add_enabled(!st.undo.is_empty(), egui::Button::new("Undo"))
-                        .on_hover_text("Undo the last pin edit (Cmd+Z)")
+                        .add_enabled(!st.undo.is_empty(), egui::Button::new(tr("Undo")))
+                        .on_hover_text(tr("Undo the last pin edit (Cmd+Z)"))
                         .clicked()
                     {
                         st.undo_pins();
@@ -457,12 +457,14 @@ impl App {
                 });
                 ui.add_space(8.0);
                 ui.label(
-                    RichText::new(format!(
-                        "{} pins · {} mesh points\nsolve {:.1} ms · draw {:.0} ms",
-                        st.pins.len(),
-                        st.mesh.rest.len(),
-                        st.solve_ms,
-                        st.draw_ms
+                    RichText::new(tr_args(
+                        "{0} pins · {1} mesh points\nsolve {2} ms · draw {3} ms",
+                        &[
+                            ("0", st.pins.len().to_string()),
+                            ("1", st.mesh.rest.len().to_string()),
+                            ("2", format!("{:.1}", st.solve_ms)),
+                            ("3", format!("{:.0}", st.draw_ms)),
+                        ],
                     ))
                     .small()
                     .color(MUTED),

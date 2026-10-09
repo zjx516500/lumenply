@@ -43,14 +43,14 @@ impl FileDialog {
     }
 
     pub(crate) fn set_title(mut self, title: impl Into<String>) -> FileDialog {
-        let title = title.into();
+        let title = crate::i18n::tr(title);
         self.about.title = title.clone();
         self.rfd = self.rfd.set_title(title);
         self
     }
 
     pub(crate) fn add_filter(mut self, name: impl Into<String>, extensions: &[impl ToString]) -> FileDialog {
-        let name = name.into();
+        let name = crate::i18n::tr(name);
         let exts: Vec<String> = extensions.iter().map(|e| e.to_string()).collect();
         self.rfd = self.rfd.add_filter(name.clone(), &exts);
         self.about.filters.push((name, exts));

@@ -227,13 +227,16 @@ impl App {
                     } else {
                         self.status.as_str()
                     };
-                    ui.label(RichText::new(msg).size(12.0).color(MUTED));
+                    ui.label(RichText::new(i18n::tr_status(msg)).size(12.0).color(MUTED));
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         ui.label(
-                            RichText::new(format!("Lumenply {}", env!("CARGO_PKG_VERSION")))
-                                .monospace()
-                                .size(11.0)
-                                .color(MUTED),
+                            RichText::new(tr_args(
+                                "Lumenply {0}",
+                                &[("0", env!("CARGO_PKG_VERSION").to_string())],
+                            ))
+                            .monospace()
+                            .size(11.0)
+                            .color(MUTED),
                         );
                     });
                 });
@@ -306,13 +309,13 @@ impl App {
                 ui.spacing_mut().item_spacing.y = 2.0;
                 ui.add_space(3.0);
                 ui.label(
-                    RichText::new("Lumenply")
+                    RichText::new(tr("Lumenply"))
                         .family(egui::FontFamily::Name("semibold".into()))
                         .size(28.0)
                         .color(TEXT),
                 );
                 ui.label(
-                    RichText::new("Free, non-destructive photo editing")
+                    RichText::new(tr("Free, non-destructive photo editing"))
                         .size(14.0)
                         .color(MUTED),
                 );
@@ -328,7 +331,9 @@ impl App {
         }
         let w = ui.available_width();
         let font = FontId::proportional(13.0);
-        let galley = ui.painter().layout(self.status.clone(), font, TEXT, w - 84.0);
+        let galley = ui
+            .painter()
+            .layout(i18n::tr_status(&self.status), font, TEXT, w - 84.0);
         let h = (galley.size().y + 22.0).max(42.0);
         let (rect, _) = ui.allocate_exact_size(egui::vec2(w, h), Sense::hover());
         let p = ui.painter();
@@ -339,7 +344,7 @@ impl App {
         p.text(
             dot,
             Align2::CENTER_CENTER,
-            "!",
+            tr("!"),
             FontId::new(13.0, semibold()),
             ACCENT_INK,
         );
@@ -353,15 +358,15 @@ impl App {
             Vec2::splat(22.0),
         );
         let x = ui.interact(x_rect, ui.id().with("welcome-error-x"), Sense::click());
-        x.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "Dismiss"));
+        x.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, tr("Dismiss")));
         ui.painter().text(
             x_rect.center(),
             Align2::CENTER_CENTER,
-            "×",
+            tr("×"),
             FontId::proportional(16.0),
             if x.hovered() { TEXT } else { MUTED },
         );
-        if x.on_hover_text("Dismiss").clicked() {
+        if x.on_hover_text(tr("Dismiss")).clicked() {
             self.status.clear();
         }
         ui.add_space(18.0);
@@ -424,7 +429,9 @@ impl App {
         let img_h = demo_image_height(ui.ctx().screen_rect().height(), full_h);
         let crop = (1.0 - img_h / full_h) / 2.0;
         let (rect, resp) = ui.allocate_exact_size(egui::vec2(LEFT_W, img_h + 58.0), Sense::click());
-        resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "Open the demo photo"));
+        resp.widget_info(|| {
+            egui::WidgetInfo::labeled(egui::WidgetType::Button, true, tr("Open the demo photo"))
+        });
         let p = ui.painter();
         let hot = resp.hovered();
         p.rect_filled(rect, 10.0, if hot { RAISED } else { PANEL });
@@ -448,21 +455,21 @@ impl App {
         p.text(
             egui::pos2(text_x, img_rect.bottom() + 12.0),
             Align2::LEFT_TOP,
-            "Open the demo photo",
+            tr("Open the demo photo"),
             FontId::new(14.0, egui::FontFamily::Name("semibold".into())),
             TEXT,
         );
         p.text(
             egui::pos2(text_x, img_rect.bottom() + 33.0),
             Align2::LEFT_TOP,
-            "Adjustment layers, a mask and a title",
+            tr("Adjustment layers, a mask and a title"),
             FontId::proportional(12.0),
             MUTED,
         );
         if hot {
             ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
         }
-        resp.on_hover_text("Aoraki at sunrise — photo by Aleks Dahlberg (CC0)")
+        resp.on_hover_text(tr("Aoraki at sunrise — photo by Aleks Dahlberg (CC0)"))
     }
 
     /// Recent files, newest first. `column_h` is the left column's height,
@@ -477,16 +484,16 @@ impl App {
             );
             let clear = ui.interact(clear_rect, ui.id().with("welcome-clear-recent"), Sense::click());
             clear.widget_info(|| {
-                egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "Clear recent files list")
+                egui::WidgetInfo::labeled(egui::WidgetType::Button, true, tr("Clear recent files list"))
             });
             ui.painter().text(
                 egui::pos2(head.right() - 2.0, head.center().y),
                 Align2::RIGHT_CENTER,
-                "Clear list",
+                tr("Clear list"),
                 FontId::proportional(11.5),
                 if clear.hovered() { TEXT } else { MUTED },
             );
-            if clear.on_hover_text("Forget the recent files").clicked() {
+            if clear.on_hover_text(tr("Forget the recent files")).clicked() {
                 self.recent = session::clear_recent();
             }
         }
@@ -514,14 +521,14 @@ impl App {
             p.text(
                 r.center() + egui::vec2(0.0, 10.0),
                 Align2::CENTER_CENTER,
-                "No recent files yet",
+                tr("No recent files yet"),
                 FontId::new(14.0, semibold()),
                 TEXT,
             );
             p.text(
                 r.center() + egui::vec2(0.0, 32.0),
                 Align2::CENTER_CENTER,
-                "Projects and images you open or save will be listed here",
+                tr("Projects and images you open or save will be listed here"),
                 FontId::proportional(12.0),
                 MUTED,
             );
@@ -547,7 +554,7 @@ impl App {
                     .file_name()
                     .map(|n| n.to_string_lossy());
                 let label = format!("Open {}", name.unwrap_or_default());
-                egui::WidgetInfo::labeled(egui::WidgetType::Button, true, label)
+                egui::WidgetInfo::labeled(egui::WidgetType::Button, true, tr(label))
             });
             let hot = resp.hovered();
             let p = ui.painter();
@@ -619,7 +626,7 @@ impl App {
                 p.text(
                     x_rect.center(),
                     Align2::CENTER_CENTER,
-                    "×",
+                    tr("×"),
                     FontId::proportional(15.0),
                     if x_hot { TEXT } else { MUTED },
                 );
@@ -642,11 +649,11 @@ impl App {
                 }
             }
             resp.context_menu(|ui| {
-                if ui.add_enabled(!missing, egui::Button::new("Open")).clicked() {
+                if ui.add_enabled(!missing, egui::Button::new(tr("Open"))).clicked() {
                     open = Some(path.clone());
                     ui.close_menu();
                 }
-                if ui.button("Remove from list").clicked() {
+                if ui.button(tr("Remove from list")).clicked() {
                     remove = Some(path.clone());
                     ui.close_menu();
                 }
@@ -713,7 +720,7 @@ fn section_label(ui: &mut egui::Ui, text: &str, width: f32) -> egui::Rect {
     ui.painter().text(
         r.left_center(),
         Align2::LEFT_CENTER,
-        text,
+        tr(text),
         FontId::new(11.0, semibold()),
         MUTED,
     );
@@ -731,7 +738,7 @@ fn action_button(
     primary: bool,
 ) -> egui::Response {
     let (rect, resp) = ui.allocate_exact_size(egui::vec2(LEFT_W, 56.0), Sense::click());
-    resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, title));
+    resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, tr(title)));
     let hot = resp.hovered();
     let p = ui.painter();
     let (fill, ink, sub_ink) = if primary {
@@ -754,14 +761,14 @@ fn action_button(
     p.text(
         egui::pos2(x, rect.top() + 10.0),
         Align2::LEFT_TOP,
-        title,
+        tr(title),
         FontId::new(14.5, egui::FontFamily::Name("semibold".into())),
         ink,
     );
     p.text(
         egui::pos2(x, rect.top() + 31.0),
         Align2::LEFT_TOP,
-        sub,
+        tr(sub),
         FontId::proportional(12.0),
         sub_ink,
     );
@@ -857,18 +864,18 @@ fn drop_zone(ui: &mut egui::Ui, hovering: bool) {
     p.text(
         egui::pos2(x, rect.center().y - 9.0),
         Align2::LEFT_CENTER,
-        if hovering {
+        tr(if hovering {
             "Release to open"
         } else {
             "Drop a photo, PSD or project anywhere in this window to open it"
-        },
+        }),
         FontId::proportional(13.5),
         if hovering { TEXT } else { MUTED },
     );
     p.text(
         egui::pos2(x, rect.center().y + 11.0),
         Align2::LEFT_CENTER,
-        "LUMEN · PSD · ORA · PNG · JPEG · TIFF · WEBP · EXR",
+        tr("LUMEN · PSD · ORA · PNG · JPEG · TIFF · WEBP · EXR"),
         FontId::monospace(10.5),
         MUTED,
     );

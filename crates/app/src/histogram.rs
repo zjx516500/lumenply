@@ -175,8 +175,8 @@ impl App {
                     ui.set_width(NAV_W);
                     close = float_header(ui, "HISTOGRAM", "Close Histogram");
                     self.histogram_graph(ui, 90.0);
-                    let key = |s: &str| RichText::new(s).color(MUTED);
-                    let val = |s: String| RichText::new(s).monospace().color(TEXT);
+                    let key = |s: &str| RichText::new(tr(s)).color(MUTED);
+                    let val = |s: String| RichText::new(tr(s)).monospace().color(TEXT);
                     let dash = || "–".to_string();
                     ui.horizontal(|ui| {
                         ui.label(key("Mean"));
@@ -204,7 +204,7 @@ impl App {
             egui::WidgetInfo::labeled(
                 egui::WidgetType::Other,
                 true,
-                "Histogram of the image's luminance",
+                tr("Histogram of the image's luminance"),
             )
         });
         let p = ui.painter();

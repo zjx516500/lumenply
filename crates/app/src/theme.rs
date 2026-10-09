@@ -67,6 +67,14 @@ pub(crate) fn install(ctx: &egui::Context) {
         FontFamily::Name("semibold".into()),
         vec!["plex-sans-semibold".into(), "plex-sans".into()],
     );
+    // Bundled fallback keeps Chinese readable on machines without CJK fonts.
+    fonts.font_data.insert(
+        "noto-sans-sc".into(),
+        FontData::from_static(include_bytes!("../assets/fonts/NotoSansSC.ttf")),
+    );
+    for family in fonts.families.values_mut() {
+        family.push("noto-sans-sc".into());
+    }
     ctx.set_fonts(fonts);
 
     let mut v = egui::Visuals::dark();
@@ -177,7 +185,7 @@ pub(crate) fn raise_controls(ui: &mut egui::Ui) {
 
 /// The accent call-to-action button (OK, Apply, Export).
 pub(crate) fn primary_button(text: &str) -> egui::Button<'static> {
-    egui::Button::new(RichText::new(text.to_string()).color(ACCENT_INK).strong())
+    egui::Button::new(RichText::new(tr(text)).color(ACCENT_INK).strong())
         .fill(ACCENT)
         .stroke(Stroke::NONE)
         .min_size(egui::vec2(72.0, 26.0))
@@ -185,7 +193,7 @@ pub(crate) fn primary_button(text: &str) -> egui::Button<'static> {
 
 /// A standard footer button at the shared size (Cancel, Discard...).
 pub(crate) fn footer_button(text: &str) -> egui::Button<'static> {
-    egui::Button::new(text.to_string()).min_size(egui::vec2(72.0, 26.0))
+    egui::Button::new(tr(text)).min_size(egui::vec2(72.0, 26.0))
 }
 
 /// Paint the keyboard-focus ring around a custom-painted widget.
@@ -258,7 +266,7 @@ pub(crate) fn segmented<T: PartialEq + Copy>(
             ui.horizontal(|ui| {
                 for (v, label) in options {
                     let on = *value == *v;
-                    if ui.add(egui::SelectableLabel::new(on, *label)).clicked() && !on {
+                    if ui.add(egui::SelectableLabel::new(on, tr(*label))).clicked() && !on {
                         *value = *v;
                         changed = true;
                     }
@@ -287,7 +295,7 @@ pub(crate) fn num_field(ui: &mut egui::Ui, dv: egui::DragValue<'_>, width: f32) 
 /// label is painted or is a separate widget (egui only names a widget from
 /// its own text).
 pub(crate) fn a11y_name(resp: &egui::Response, name: &str) {
-    resp.ctx.accesskit_node_builder(resp.id, |b| b.set_name(name));
+    resp.ctx.accesskit_node_builder(resp.id, |b| b.set_name(tr(name)));
 }
 
 /// The sense for a floating area's background: it swallows clicks so they
@@ -309,7 +317,7 @@ pub(crate) fn a11y_scroll<R>(ctx: &egui::Context, out: &egui::scroll_area::Scrol
     }
     ctx.accesskit_node_builder(id, |b| {
         b.set_role(egui::accesskit::Role::ScrollView);
-        b.set_name(name);
+        b.set_name(tr(name));
     });
 }
 
@@ -323,7 +331,7 @@ pub(crate) fn bar_frame() -> egui::Frame {
 
 pub(crate) fn section_title(ui: &mut egui::Ui, text: &str) {
     ui.add_space(4.0);
-    ui.label(RichText::new(text).small().strong().color(MUTED));
+    ui.label(RichText::new(tr(text)).small().strong().color(MUTED));
 }
 
 /// The muted label cell of a label-left row, `w` wide; longer text is
@@ -334,7 +342,7 @@ pub(crate) fn row_label(ui: &mut egui::Ui, text: &str, w: f32) {
         egui::Layout::left_to_right(egui::Align::Center),
         |ui| {
             ui.set_min_width(w);
-            ui.add(egui::Label::new(RichText::new(text).color(MUTED)).truncate());
+            ui.add(egui::Label::new(RichText::new(tr(text)).color(MUTED)).truncate());
         },
     );
 }
@@ -589,7 +597,7 @@ struct MenuItem<'a> {
 impl egui::Widget for MenuItem<'_> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let font = egui::TextStyle::Button.resolve(ui.style());
-        let label = ui.painter().layout_no_wrap(self.label.to_owned(), font, TEXT);
+        let label = ui.painter().layout_no_wrap(tr(self.label), font, TEXT);
         let keys = (!self.shortcut.is_empty()).then(|| {
             ui.painter()
                 .layout_no_wrap(self.shortcut.to_owned(), FontId::proportional(12.0), MUTED)
@@ -600,7 +608,9 @@ impl egui::Widget for MenuItem<'_> {
             width += MENU_SHORTCUT_GAP + k.size().x;
         }
         let (rect, resp) = ui.allocate_at_least(egui::vec2(width, MENU_ITEM_H), Sense::click());
-        resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, ui.is_enabled(), self.label));
+        resp.widget_info(|| {
+            egui::WidgetInfo::labeled(egui::WidgetType::Button, ui.is_enabled(), tr(self.label))
+        });
         if ui.is_rect_visible(rect) {
             let p = ui.painter();
             if ui.is_enabled() && (resp.hovered() || resp.has_focus() || resp.highlighted()) {
@@ -700,7 +710,7 @@ pub(crate) fn menu_heading(ui: &mut egui::Ui, text: &str) {
     ui.add_space(4.0);
     ui.horizontal(|ui| {
         ui.add_space(MENU_PAD_X);
-        ui.label(RichText::new(text).small().strong().color(MUTED));
+        ui.label(RichText::new(tr(text)).small().strong().color(MUTED));
     });
     ui.add_space(2.0);
 }
@@ -712,7 +722,7 @@ pub(crate) fn menu_separator(ui: &mut egui::Ui) {
 
 /// A menu-bar menu, or a submenu inside another menu.
 pub(crate) fn menu<R>(ui: &mut egui::Ui, title: &str, add: impl FnOnce(&mut egui::Ui) -> R) -> Option<R> {
-    let r = ui.menu_button(title, |ui| {
+    let r = ui.menu_button(tr(title), |ui| {
         popup_style(ui);
         // A menu taller than the window (Edit on a 600-point screen)
         // scrolls instead of running off the bottom with its last items.

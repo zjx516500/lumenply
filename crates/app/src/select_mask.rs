@@ -487,12 +487,12 @@ impl App {
             .exact_height(40.0)
             .show(ctx, |ui| {
                 ui.horizontal_centered(|ui| {
-                    ui.label(RichText::new("Select and Mask").strong().color(TEXT));
-                    ui.label(RichText::new(&st.layer_name).color(MUTED));
+                    ui.label(RichText::new(tr("Select and Mask")).strong().color(TEXT));
+                    ui.label(RichText::new(tr(&st.layer_name)).color(MUTED));
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         ui.label(
                             RichText::new(
-                                "Paint to refine the edge · Alt restores · [ ] size · J edge · F view · wheel zooms",
+                                tr("Paint to refine the edge · Alt restores · [ ] size · J edge · F view · wheel zooms"),
                             )
                             .color(MUTED),
                         );
@@ -518,9 +518,16 @@ impl App {
                 ui.with_layout(egui::Layout::bottom_up(egui::Align::Max), |ui| {
                     let (w, h) = st.size();
                     ui.label(
-                        RichText::new(format!("Preview {w}×{h} · {:.0} ms", st.last_ms))
-                            .small()
-                            .color(MUTED),
+                        RichText::new(tr_args(
+                            "Preview {w}×{h} · {0} ms",
+                            &[
+                                ("w", w.to_string()),
+                                ("h", h.to_string()),
+                                ("0", format!("{:.0}", st.last_ms)),
+                            ],
+                        ))
+                        .small()
+                        .color(MUTED),
                     );
                     ui.horizontal(|ui| {
                         if ui.add(primary_button("OK")).clicked() {
@@ -674,32 +681,35 @@ impl App {
         ui.add_enabled_ui(st.view == MaskView::Overlay, |ui| {
             slider_row_scaled_w(ui, "Opacity", &mut st.opacity, 0.0..=1.0, 100.0, "%", LABEL);
         });
-        check(ui, &mut st.show_edge, "Show edge (J)")
-            .on_hover_text("Show only the band the edge is refined in");
+        check(ui, &mut st.show_edge, tr("Show edge (J)"))
+            .on_hover_text(tr("Show only the band the edge is refined in"));
         ui.add_enabled_ui(st.layer_pixel, |ui| {
-            check(ui, &mut st.sample_all, "Sample all layers")
-                .on_hover_text("Fit the edge to the whole picture instead of the active layer")
-                .on_disabled_hover_text("The active layer has no pixels: the whole picture is sampled");
+            check(ui, &mut st.sample_all, tr("Sample all layers"))
+                .on_hover_text(tr(
+                    "Fit the edge to the whole picture instead of the active layer",
+                ))
+                .on_disabled_hover_text(tr("The active layer has no pixels: the whole picture is sampled"));
         });
 
         section_title(ui, "EDGE DETECTION");
         let log = RowOpts { log: true, ..opts };
         slider_row_ex(ui, "Radius", &mut st.params.radius, 0.0..=250.0, " px", log);
-        check(ui, &mut st.params.smart_radius, "Smart radius")
-            .on_hover_text("Narrow the band where the edge is hard, keep it wide where it is soft");
+        check(ui, &mut st.params.smart_radius, tr("Smart radius")).on_hover_text(tr(
+            "Narrow the band where the edge is hard, keep it wide where it is soft",
+        ));
 
         section_title(ui, "REFINE EDGE BRUSH");
         slider_row_ex(ui, "Size", &mut st.brush_size, 2.0..=1000.0, " px", log);
         ui.horizontal(|ui| {
             ui.label(
-                RichText::new("Paint over hair; Alt restores")
+                RichText::new(tr("Paint over hair; Alt restores"))
                     .small()
                     .color(MUTED),
             );
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 if ui
-                    .add_enabled(!st.strokes.is_empty(), egui::Button::new("Clear"))
-                    .on_hover_text("Remove every brush stroke")
+                    .add_enabled(!st.strokes.is_empty(), egui::Button::new(tr("Clear")))
+                    .on_hover_text(tr("Remove every brush stroke"))
                     .clicked()
                 {
                     st.strokes.clear();
@@ -723,9 +733,11 @@ impl App {
         section_title(ui, "OUTPUT");
         let had = st.params.decontaminate;
         ui.add_enabled_ui(st.layer_pixel, |ui| {
-            check(ui, &mut st.params.decontaminate, "Decontaminate colours")
-                .on_hover_text("Replace the background's colour fringe with nearby foreground colour")
-                .on_disabled_hover_text("Needs a pixel layer to copy");
+            check(ui, &mut st.params.decontaminate, tr("Decontaminate colours"))
+                .on_hover_text(tr(
+                    "Replace the background's colour fringe with nearby foreground colour",
+                ))
+                .on_disabled_hover_text(tr("Needs a pixel layer to copy"));
         });
         if st.params.decontaminate && !had && !st.output.makes_layer() {
             st.output = RefineOutput::NewLayerWithMask;
@@ -751,7 +763,7 @@ impl App {
                         let block = output_block(st, o);
                         ui.add_enabled_ui(block.is_none(), |ui| {
                             ui.selectable_value(&mut st.output, o, o.name())
-                                .on_disabled_hover_text(block.unwrap_or_default());
+                                .on_disabled_hover_text(tr(block.unwrap_or_default()));
                         });
                     }
                 });
@@ -759,8 +771,8 @@ impl App {
         });
         ui.add_space(4.0);
         if ui
-            .button("Reset")
-            .on_hover_text("Back to the default settings, no brush strokes")
+            .button(tr("Reset"))
+            .on_hover_text(tr("Back to the default settings, no brush strokes"))
             .clicked()
         {
             st.params = SelectMaskPrefs::default().params;

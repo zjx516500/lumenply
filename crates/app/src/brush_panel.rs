@@ -685,7 +685,7 @@ impl App {
             p.circle_filled(rect.right_top() + egui::vec2(-4.0, 4.0), 2.5, ACCENT);
         }
         focus_ring(ui, &resp, rect, RADIUS);
-        let resp = resp.on_hover_text("Brush settings: tip, shape dynamics, scattering and transfer");
+        let resp = resp.on_hover_text(tr("Brush settings: tip, shape dynamics, scattering and transfer"));
         if resp.clicked() {
             ctx.memory_mut(|m| m.toggle_popup(panel_id()));
         }
@@ -716,7 +716,7 @@ impl App {
                 ui.painter().text(
                     rect.center(),
                     egui::Align2::CENTER_CENTER,
-                    "?",
+                    tr("?"),
                     FontId::proportional(14.0),
                     MUTED,
                 );
@@ -730,7 +730,7 @@ impl App {
         let (rect, resp) = ui.allocate_exact_size(egui::vec2(CELL, CELL), Sense::click());
         let label = format!("Brush tip {name}");
         resp.widget_info(|| {
-            egui::WidgetInfo::selected(egui::WidgetType::SelectableLabel, true, selected, &label)
+            egui::WidgetInfo::selected(egui::WidgetType::SelectableLabel, true, selected, tr(&label))
         });
         let fill = if selected {
             ACCENT_TINT
@@ -773,9 +773,9 @@ impl App {
                     .inner_margin(egui::Margin::same(12.0))
                     .show(ui, |ui| {
                         ui.horizontal(|ui| {
-                            ui.label(RichText::new("Brush settings").strong().color(TEXT));
+                            ui.label(RichText::new(tr("Brush settings")).strong().color(TEXT));
                             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                                let r = ui.small_button("×").on_hover_text("Close brush settings");
+                                let r = ui.small_button(tr("×")).on_hover_text(tr("Close brush settings"));
                                 a11y_name(&r, "Close brush settings");
                                 close = r.clicked();
                             });
@@ -845,11 +845,11 @@ impl App {
             Some(t) => format!("{} · {}×{} px", t.name(), t.width(), t.height()),
             None => "Round · hardness from the bar".into(),
         };
-        ui.label(RichText::new(about).small().color(MUTED));
+        ui.label(RichText::new(tr(about)).small().color(MUTED));
         ui.horizontal(|ui| {
             if ui
-                .button("Import .abr…")
-                .on_hover_text("Add the tips of a Photoshop brush set (.abr)")
+                .button(tr("Import .abr…"))
+                .on_hover_text(tr("Add the tips of a Photoshop brush set (.abr)"))
                 .clicked()
             {
                 self.pick_import_brushes();
@@ -857,9 +857,9 @@ impl App {
             let imported =
                 !self.brushes.selected.is_empty() && !self.brushes.selected.starts_with("builtin:");
             if ui
-                .add_enabled(imported, egui::Button::new("Remove tip"))
-                .on_hover_text("Remove this imported tip from the list")
-                .on_disabled_hover_text("Only imported tips can be removed")
+                .add_enabled(imported, egui::Button::new(tr("Remove tip")))
+                .on_hover_text(tr("Remove this imported tip from the list"))
+                .on_disabled_hover_text(tr("Only imported tips can be removed"))
                 .clicked()
             {
                 let id = self.brushes.selected.clone();
@@ -915,7 +915,7 @@ impl App {
             LABEL,
         );
         ui.label(
-            RichText::new("Paper tooth the paint can't fill, fixed to the canvas")
+            RichText::new(tr("Paper tooth the paint can't fill, fixed to the canvas"))
                 .small()
                 .color(MUTED),
         );
@@ -940,7 +940,11 @@ impl App {
         pct(ui, "Size jitter", &mut d.size_jitter);
         pct(ui, "Minimum diameter", &mut d.min_diameter);
         pct(ui, "Angle jitter", &mut d.angle_jitter);
-        check(ui, &mut d.follow_direction, "Angle follows the stroke direction");
+        check(
+            ui,
+            &mut d.follow_direction,
+            tr("Angle follows the stroke direction"),
+        );
         pct(ui, "Roundness jitter", &mut d.roundness_jitter);
         slider_row_scaled_w(
             ui,
@@ -952,8 +956,8 @@ impl App {
             LABEL,
         );
         ui.horizontal(|ui| {
-            check(ui, &mut d.flip_x_jitter, "Flip X jitter");
-            check(ui, &mut d.flip_y_jitter, "Flip Y jitter");
+            check(ui, &mut d.flip_x_jitter, tr("Flip X jitter"));
+            check(ui, &mut d.flip_y_jitter, tr("Flip Y jitter"));
         });
         section_title(ui, "SCATTERING");
         slider_row_scaled_w(
@@ -966,8 +970,8 @@ impl App {
             LABEL,
         );
         let mut both = !d.scatter_across;
-        if check(ui, &mut both, "Both axes")
-            .on_hover_text("Off: dabs scatter only across the stroke")
+        if check(ui, &mut both, tr("Both axes"))
+            .on_hover_text(tr("Off: dabs scatter only across the stroke"))
             .changed()
         {
             d.scatter_across = !both;
@@ -992,8 +996,10 @@ impl App {
         pct(ui, "Flow jitter", &mut d.flow_jitter);
         ui.add_space(4.0);
         if ui
-            .button("Reset dynamics")
-            .on_hover_text("No jitter, scatter, count or grain; angle 0° and full roundness")
+            .button(tr("Reset dynamics"))
+            .on_hover_text(tr(
+                "No jitter, scatter, count or grain; angle 0° and full roundness",
+            ))
             .clicked()
         {
             self.brush.dynamics = BrushDynamics::default();

@@ -498,18 +498,18 @@ impl App {
                         (true, true, _) => format!("{name}: on (click to unlock)"),
                         (true, false, _) => format!("{name}: off"),
                     };
-                    let resp = resp.on_hover_text(&tip).on_disabled_hover_text(&tip);
+                    let resp = resp.on_hover_text(tr(&tip)).on_disabled_hover_text(tr(&tip));
                     if resp.clicked() {
                         clicked = Some(*kind);
                     }
                 }
-                ui.label(RichText::new("Lock").small().color(MUTED));
+                ui.label(RichText::new(tr("Lock")).small().color(MUTED));
                 ui.add_space(6.0);
                 // The rest of the row: find layers by name.
                 let w = (ui.available_width() - 2.0).max(40.0);
                 let r = ui.add(
                     egui::TextEdit::singleline(&mut filter)
-                        .hint_text("Filter layers")
+                        .hint_text(tr("Filter layers"))
                         .desired_width(w)
                         .font(egui::TextStyle::Small),
                 );
@@ -632,7 +632,7 @@ impl App {
             let r = ui.add_enabled(block.is_none(), layers::IconButton::new(*icon, tip));
             note_target(ui.ctx(), id, r.rect);
             let r = match block {
-                Some(why) => r.on_disabled_hover_text(why),
+                Some(why) => r.on_disabled_hover_text(tr(why)),
                 None => r,
             };
             if r.clicked() {
@@ -640,7 +640,7 @@ impl App {
             }
         }
         ui.spacing_mut().item_spacing.x = 8.0;
-        let dist = ui.add(egui::Button::new("Distribute"));
+        let dist = ui.add(egui::Button::new(tr("Distribute")));
         note_target(ui.ctx(), "distribute-menu", dist.rect);
         button_menu(&dist, |ui| {
             for (id, _, label, _) in &ALIGN_ACTIONS[6..] {
@@ -682,7 +682,7 @@ fn lock_toggle(ui: &mut egui::Ui, kind: LockKind, on: bool, enabled: bool, name:
     };
     paint_lock_icon(p, rect.shrink(4.0), kind, ink);
     let label = name.to_string();
-    resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Checkbox, enabled, on, &label));
+    resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Checkbox, enabled, on, tr(&label)));
     resp
 }
 

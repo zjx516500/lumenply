@@ -288,7 +288,7 @@ impl App {
                     egui::Layout::left_to_right(egui::Align::Center),
                     |ui| {
                         ui.set_min_width(230.0);
-                        ui.add(egui::Label::new(RichText::new(what).color(TEXT)).truncate());
+                        ui.add(egui::Label::new(RichText::new(tr(what)).color(TEXT)).truncate());
                     },
                 );
                 ui.label(RichText::new(keys).monospace().color(MUTED));
@@ -405,7 +405,7 @@ impl App {
         let mut v: Vec<Entry> = ACTIONS
             .iter()
             .map(|(label, id)| Entry {
-                label: (*label).into(),
+                label: tr(*label),
                 keys: self.action_keys(ctx, id),
                 block: self.action_block(id),
                 id: PaletteAct::Menu(id),
@@ -420,7 +420,10 @@ impl App {
                 egui::Modifiers::NONE
             };
             v.push(Entry {
-                label: tool_palette_label(t),
+                label: match t {
+                    Tool::Text | Tool::Shape | Tool::Pen => tr(tool_palette_label(t)),
+                    _ => tr_args("{tool} tool", &[("tool", tr(t.name()))]),
+                },
                 keys: Key::from_name(t.key()).map_or(String::new(), |k| shortcut_text(ctx, m, k)),
                 block: None,
                 id: PaletteAct::Tool(t),
@@ -428,7 +431,7 @@ impl App {
         }
         for (name, adj) in adjustment_presets() {
             v.push(Entry {
-                label: format!("New adjustment layer: {name}"),
+                label: tr_args("New adjustment layer: {name}", &[("name", tr(name))]),
                 keys: String::new(),
                 block: None,
                 id: PaletteAct::Adjustment(adj),
@@ -437,13 +440,13 @@ impl App {
         for (name, f) in filter_presets() {
             let id = filter_id(&f);
             v.push(Entry {
-                label: format!("Apply filter: {name}..."),
+                label: tr_args("Apply filter: {name}...", &[("name", tr(name))]),
                 keys: String::new(),
                 block: self.action_block(id),
                 id: PaletteAct::Menu(id),
             });
             v.push(Entry {
-                label: format!("New live filter layer: {name}"),
+                label: tr_args("New live filter layer: {name}", &[("name", tr(name))]),
                 keys: String::new(),
                 block: None,
                 id: PaletteAct::FilterLayer(f),
@@ -507,7 +510,7 @@ impl App {
                         ui.set_width(width);
                         let edit = ui.add(
                             egui::TextEdit::singleline(&mut state.query)
-                                .hint_text("Search tools, filters, commands...")
+                                .hint_text(tr("Search tools, filters, commands..."))
                                 .desired_width(f32::INFINITY),
                         );
                         a11y_name(&edit, "Search commands");
@@ -529,7 +532,7 @@ impl App {
                                         egui::WidgetType::SelectableLabel,
                                         e.block.is_none(),
                                         active,
-                                        &e.label,
+                                        tr(&e.label),
                                     )
                                 });
                                 if active {
@@ -567,7 +570,7 @@ impl App {
                                     p.text(
                                         rect.right_center() - egui::vec2(MENU_PAD_X, 0.0),
                                         Align2::RIGHT_CENTER,
-                                        hint,
+                                        tr(hint),
                                         FontId::proportional(12.0),
                                         hint_ink,
                                     );
@@ -578,7 +581,7 @@ impl App {
                             }
                             if hits.is_empty() {
                                 ui.add_space(4.0);
-                                ui.label(RichText::new("No matching command").color(MUTED));
+                                ui.label(RichText::new(tr("No matching command")).color(MUTED));
                             }
                         });
                         a11y_scroll(ui.ctx(), &scroll_out, "Commands");
@@ -1081,6 +1084,20 @@ impl App {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn chinese_palette_entries_keep_their_action_ids_and_are_searchable() {
+        let app = crate::a11y_tests::launch(&[]);
+        let _language = crate::i18n::Language::Chinese.enter();
+        let ctx = crate::a11y_tests::ctx();
+        let _ = ctx.run(Default::default(), |_| {});
+        let entries = app.palette_entries(&ctx);
+        let hits: Vec<_> = entries.iter().filter(|e| e.label.contains("新建图层")).collect();
+        assert!(hits.iter().any(|e| e.id == PaletteAct::Menu("new-layer")));
+        assert!(entries
+            .iter()
+            .any(|e| e.label.contains("画笔") && e.id == PaletteAct::Tool(Tool::Brush)));
+    }
 
     #[test]
     fn every_action_has_one_id_and_one_label() {

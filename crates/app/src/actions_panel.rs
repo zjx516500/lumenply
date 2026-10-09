@@ -547,7 +547,7 @@ impl App {
                         ui.horizontal(|ui| {
                             let (r, _) = ui.allocate_exact_size(egui::vec2(10.0, 14.0), Sense::hover());
                             ui.painter().circle_filled(r.center(), 4.5, DANGER);
-                            ui.label(RichText::new("Recording: your edits become steps").color(DANGER));
+                            ui.label(RichText::new(tr("Recording: your edits become steps")).color(DANGER));
                         });
                     }
                     self.actions_buttons(ui, &mut cmd);
@@ -560,14 +560,17 @@ impl App {
                     if let Some(i) = self.actions.confirm_delete {
                         let name = self.actions.list.get(i).map_or("", |e| e.action.name.as_str());
                         ui.separator();
-                        ui.label(RichText::new(format!("Delete \u{201C}{name}\u{201D}?")).color(TEXT));
+                        ui.label(
+                            RichText::new(tr_args("Delete “{name}”?", &[("name", name.to_string())]))
+                                .color(TEXT),
+                        );
                         ui.horizontal(|ui| {
                             // Not just "Delete": the panel's own Delete
                             // button is right above.
-                            if ui.button("Delete action").clicked() {
+                            if ui.button(tr("Delete action")).clicked() {
                                 cmd = Some(PanelCmd::Delete(i));
                             }
-                            if ui.button("Cancel").clicked() {
+                            if ui.button(tr("Cancel")).clicked() {
                                 cmd = Some(PanelCmd::CancelDelete);
                             }
                         });
@@ -575,10 +578,10 @@ impl App {
                     if let Some((err, text)) = &self.actions.message {
                         ui.separator();
                         let c = if *err { DANGER } else { MUTED };
-                        ui.add(egui::Label::new(RichText::new(text).small().color(c)).wrap());
+                        ui.add(egui::Label::new(RichText::new(tr(text)).small().color(c)).wrap());
                     }
                     ui.label(
-                        RichText::new("Plays as one undo step. Steps act on the active layer.")
+                        RichText::new(tr("Plays as one undo step. Steps act on the active layer."))
                             .small()
                             .color(MUTED),
                     );
@@ -628,8 +631,8 @@ impl App {
             ui.spacing_mut().button_padding = egui::vec2(6.0, 3.0);
             if recording {
                 if ui
-                    .button(RichText::new("Stop").color(DANGER))
-                    .on_hover_text("Stop recording")
+                    .button(RichText::new(tr("Stop")).color(DANGER))
+                    .on_hover_text(tr("Stop recording"))
                     .clicked()
                 {
                     *cmd = Some(PanelCmd::Stop);
@@ -640,37 +643,37 @@ impl App {
                 } else {
                     "Record a new action"
                 };
-                if ui.button("Record").on_hover_text(tip).clicked() {
+                if ui.button(tr("Record")).on_hover_text(tr(tip)).clicked() {
                     *cmd = Some(PanelCmd::Record);
                 }
             }
             if ui
-                .add_enabled(play_why.is_none(), egui::Button::new("Play"))
-                .on_hover_text("Play the selected action on this document")
-                .on_disabled_hover_text(play_why.unwrap_or_default())
+                .add_enabled(play_why.is_none(), egui::Button::new(tr("Play")))
+                .on_hover_text(tr("Play the selected action on this document"))
+                .on_disabled_hover_text(tr(play_why.unwrap_or_default()))
                 .clicked()
             {
                 *cmd = sel.map(PanelCmd::Play);
             }
             if ui
-                .add_enabled(!recording, egui::Button::new("New"))
-                .on_hover_text("New action: starts recording")
+                .add_enabled(!recording, egui::Button::new(tr("New")))
+                .on_hover_text(tr("New action: starts recording"))
                 .clicked()
             {
                 *cmd = Some(PanelCmd::New);
             }
             if ui
-                .add_enabled(rename_why.is_none(), egui::Button::new("Rename"))
+                .add_enabled(rename_why.is_none(), egui::Button::new(tr("Rename")))
                 .on_hover_text("Rename the selected action (or double-click its name)")
-                .on_disabled_hover_text(rename_why.unwrap_or_default())
+                .on_disabled_hover_text(tr(rename_why.unwrap_or_default()))
                 .clicked()
             {
                 *cmd = user_sel.map(PanelCmd::BeginRename);
             }
             if ui
-                .add_enabled(delete_why.is_none(), egui::Button::new("Delete"))
-                .on_hover_text("Delete the selected action")
-                .on_disabled_hover_text(delete_why.unwrap_or_default())
+                .add_enabled(delete_why.is_none(), egui::Button::new(tr("Delete")))
+                .on_hover_text(tr("Delete the selected action"))
+                .on_disabled_hover_text(tr(delete_why.unwrap_or_default()))
                 .clicked()
             {
                 *cmd = user_sel.map(PanelCmd::AskDelete);
@@ -688,7 +691,7 @@ impl App {
                 let (rect, arrow) = ui.allocate_exact_size(egui::vec2(16.0, 18.0), Sense::click());
                 let verb = if open { "Hide" } else { "Show" };
                 let spoken = format!("{verb} the steps of {name}");
-                arrow.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, &spoken));
+                arrow.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, tr(&spoken)));
                 let c = rect.center();
                 let col = if arrow.hovered() { TEXT } else { MUTED };
                 let pts = if open {
@@ -707,7 +710,10 @@ impl App {
                 ui.painter()
                     .add(egui::Shape::convex_polygon(pts, col, Stroke::NONE));
                 theme::focus_ring(ui, &arrow, rect, 3.0);
-                if arrow.on_hover_text(format!("{verb} steps")).clicked() {
+                if arrow
+                    .on_hover_text(tr_args("{verb} steps", &[("verb", verb.to_string())]))
+                    .clicked()
+                {
                     *cmd = Some(PanelCmd::Toggle(i));
                 }
                 match &mut self.actions.renaming {
@@ -741,16 +747,16 @@ impl App {
                 }
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if recording_into == Some(i) {
-                        ui.label(RichText::new("recording").small().color(DANGER));
+                        ui.label(RichText::new(tr("recording")).small().color(DANGER));
                     } else if builtin {
-                        ui.label(RichText::new("built-in").small().color(MUTED));
+                        ui.label(RichText::new(tr("built-in")).small().color(MUTED));
                     }
                 });
             });
             if open {
                 let steps = &self.actions.list[i].action.steps;
                 if steps.is_empty() {
-                    ui.label(RichText::new("      No steps yet").small().color(MUTED));
+                    ui.label(RichText::new(tr("      No steps yet")).small().color(MUTED));
                 }
                 let mut n = 0;
                 for step in steps {

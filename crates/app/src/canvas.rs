@@ -779,10 +779,10 @@ impl App {
                     .show(ui, |ui| {
                         ui.horizontal(|ui| {
                             ui.spacing_mut().item_spacing.x = 4.0;
-                            let out = ui.add(egui::Button::new("−").frame(false));
+                            let out = ui.add(egui::Button::new(tr("−")).frame(false));
                             a11y_name(&out, "Zoom out");
                             let tip = format!("Zoom out ({})", self.action_keys(ctx, "zoom-out"));
-                            if out.on_hover_text(tip).clicked() {
+                            if out.on_hover_text(tr(tip)).clicked() {
                                 self.zoom_step_at(clip, clip.center(), false);
                             }
                             ui.add_sized(
@@ -793,17 +793,17 @@ impl App {
                                         .color(TEXT),
                                 ),
                             );
-                            let zin = ui.add(egui::Button::new("+").frame(false));
+                            let zin = ui.add(egui::Button::new(tr("+")).frame(false));
                             a11y_name(&zin, "Zoom in");
                             let tip = format!("Zoom in ({})", self.action_keys(ctx, "zoom-in"));
-                            if zin.on_hover_text(tip).clicked() {
+                            if zin.on_hover_text(tr(tip)).clicked() {
                                 self.zoom_step_at(clip, clip.center(), true);
                             }
                             ui.separator();
                             let tip = format!("Fit on screen ({})", self.action_keys(ctx, "fit"));
                             if ui
-                                .add(egui::Button::new(RichText::new("Fit").color(MUTED)).frame(false))
-                                .on_hover_text(tip)
+                                .add(egui::Button::new(RichText::new(tr("Fit")).color(MUTED)).frame(false))
+                                .on_hover_text(tr(tip))
                                 .clicked()
                             {
                                 self.view_cmd = Some(ViewCmd::Fit);
@@ -848,37 +848,37 @@ impl App {
                     .show(ui, |ui| {
                         ui.horizontal(|ui| {
                             if ui
-                                .add_enabled(can_mask, egui::Button::new("Mask"))
-                                .on_hover_text("Mask the active layer with this selection")
+                                .add_enabled(can_mask, egui::Button::new(tr("Mask")))
+                                .on_hover_text(tr("Mask the active layer with this selection"))
                                 .clicked()
                             {
                                 act = Some("add-mask");
                             }
                             if ui
-                                .add_enabled(self.active_is_pixel(), egui::Button::new("Fill"))
-                                .on_hover_text("Fill the selection with the foreground colour")
+                                .add_enabled(self.active_is_pixel(), egui::Button::new(tr("Fill")))
+                                .on_hover_text(tr("Fill the selection with the foreground colour"))
                                 .clicked()
                             {
                                 act = Some("fill");
                             }
                             if ui
-                                .add_enabled(self.active_is_pixel(), egui::Button::new("Clear"))
+                                .add_enabled(self.active_is_pixel(), egui::Button::new(tr("Clear")))
                                 .clicked()
                             {
                                 act = Some("clear");
                             }
                             if ui
-                                .add_enabled(self.active_is_pixel(), egui::Button::new("New layer"))
-                                .on_hover_text("Copy the selected pixels onto a new layer")
+                                .add_enabled(self.active_is_pixel(), egui::Button::new(tr("New layer")))
+                                .on_hover_text(tr("Copy the selected pixels onto a new layer"))
                                 .clicked()
                             {
                                 act = Some("layer-via-copy");
                             }
                             if ui
-                                .add_enabled(self.active_is_pixel(), egui::Button::new("Content-Aware"))
-                                .on_hover_text(
+                                .add_enabled(self.active_is_pixel(), egui::Button::new(tr("Content-Aware")))
+                                .on_hover_text(tr(
                                     "Rebuild the selected area from its surroundings (Content-Aware Fill)",
-                                )
+                                ))
                                 .clicked()
                             {
                                 act = Some("content-aware");

@@ -310,7 +310,7 @@ struct PickerState {
 pub(crate) fn color_edit_button_rgb(ui: &mut egui::Ui, rgb: &mut [f32; 3]) -> egui::Response {
     let (rect, resp) = ui.allocate_exact_size(egui::vec2(34.0, 20.0), Sense::click());
     let hex = format_hex(*rgb);
-    resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::ColorButton, ui.is_enabled(), &hex));
+    resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::ColorButton, ui.is_enabled(), tr(&hex)));
     let popup_id = resp.id.with("color-picker");
     debug_open_nth(ui.ctx(), popup_id);
     let open = ui.memory(|m| m.is_popup_open(popup_id));
@@ -327,7 +327,10 @@ pub(crate) fn color_edit_button_rgb(ui: &mut egui::Ui, rgb: &mut [f32; 3]) -> eg
     let mut resp = if open {
         resp
     } else {
-        resp.on_hover_text(format!("{}  ·  click to edit", format_hex(*rgb)))
+        resp.on_hover_text(tr_args(
+            "{0}  ·  click to edit",
+            &[("0", format_hex(*rgb).to_string())],
+        ))
     };
     let edit = picker_popup(ui, &resp, popup_id, None, rgb, Placement::Auto);
     // The end of a drag reports as a change too, so callers that only
@@ -561,7 +564,7 @@ fn picker_body(
     };
 
     if let Some(t) = title {
-        ui.label(RichText::new(t.to_uppercase()).small().strong().color(MUTED));
+        ui.label(RichText::new(tr(t.to_uppercase())).small().strong().color(MUTED));
     }
 
     // Saturation (x) / value (y) square.
@@ -606,7 +609,7 @@ fn picker_body(
     ui.horizontal(|ui| {
         ui.spacing_mut().item_spacing.x = 8.0;
         let (cr, cmp) = ui.allocate_exact_size(egui::vec2(56.0, 28.0), Sense::click());
-        cmp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "Previous colour"));
+        cmp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, tr("Previous colour")));
         {
             let p = ui.painter();
             let mid = cr.center().x;
@@ -635,11 +638,16 @@ fn picker_body(
             let c = st.original;
             set(rgb, st, out, c);
         }
-        cmp.on_hover_text("Left: the colour before (click to go back)  ·  Right: new");
+        cmp.on_hover_text(tr("Left: the colour before (click to go back)  ·  Right: new"));
 
         let (er, eye) = ui.allocate_exact_size(egui::vec2(28.0, 28.0), Sense::click());
         eye.widget_info(|| {
-            egui::WidgetInfo::selected(egui::WidgetType::Button, true, armed, "Pick colour from canvas")
+            egui::WidgetInfo::selected(
+                egui::WidgetType::Button,
+                true,
+                armed,
+                tr("Pick colour from canvas"),
+            )
         });
         let (fill, ink) = if armed {
             (ACCENT, ACCENT_INK)
@@ -654,7 +662,7 @@ fn picker_body(
         }
         crate::tools::draw_icon(ui.painter(), er.shrink(6.0), Tool::Eyedropper, ink);
         if eye
-            .on_hover_text("Sample a colour from the canvas (Esc cancels)")
+            .on_hover_text(tr("Sample a colour from the canvas (Esc cancels)"))
             .clicked()
         {
             *toggle_arm = true;
@@ -671,7 +679,7 @@ fn picker_body(
             .min_size(egui::vec2(w, 28.0))
             .vertical_align(egui::Align::Center)
             .text_color(if st.hex_bad { BAD } else { TEXT });
-        let r = ui.add(te).on_hover_text("Hex: #RRGGBB or #RGB");
+        let r = ui.add(te).on_hover_text(tr("Hex: #RRGGBB or #RGB"));
         a11y_name(&r, "Hex colour");
         let ring = if r.has_focus() {
             ACCENT
@@ -728,7 +736,10 @@ fn picker_body(
             .into_iter()
             .enumerate()
         {
-            ui.add_sized([12.0, 24.0], egui::Label::new(RichText::new(label).color(MUTED)));
+            ui.add_sized(
+                [12.0, 24.0],
+                egui::Label::new(RichText::new(tr(label)).color(MUTED)),
+            );
             let r = ui.add_sized(
                 [field, 24.0],
                 egui::DragValue::new(&mut b[i]).range(0..=255).speed(0.5),
@@ -746,7 +757,7 @@ fn picker_body(
     });
 
     // Recent colours, newest first; empty slots keep the row's shape.
-    ui.label(RichText::new("RECENT").small().strong().color(MUTED));
+    ui.label(RichText::new(tr("RECENT")).small().strong().color(MUTED));
     let list = recent(ui.ctx());
     ui.horizontal(|ui| {
         let gap = 4.0;
@@ -762,14 +773,16 @@ fn picker_body(
             let (r, resp) = ui.allocate_exact_size(egui::vec2(side, side), sense);
             if let Some(&c8) = list.get(i) {
                 let label = format!("Recent colour {}", format_hex(c8.map(|x| x as f32 / 255.0)));
-                resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::ColorButton, true, &label));
+                resp.widget_info(|| {
+                    egui::WidgetInfo::labeled(egui::WidgetType::ColorButton, true, tr(&label))
+                });
             }
             match list.get(i) {
                 Some(&c8) => {
                     let c = c8.map(|x| x as f32 / 255.0);
                     let edge = if resp.hovered() { TEXT } else { LINE };
                     paint_swatch(ui.painter(), r, c, edge);
-                    if resp.on_hover_text(format_hex(c)).clicked() {
+                    if resp.on_hover_text(tr(format_hex(c))).clicked() {
                         st.hsv = hsv_keeping(st.hsv, c);
                         set(rgb, st, out, c);
                     }
@@ -878,7 +891,7 @@ fn paint_loupe(ctx: &egui::Context, at: Pos2, c: Option<[f32; 3]>) {
             p.text(
                 chip.right_center() + egui::vec2(9.0, 0.0),
                 Align2::LEFT_CENTER,
-                "outside",
+                tr("outside"),
                 FontId::proportional(12.0),
                 MUTED,
             );

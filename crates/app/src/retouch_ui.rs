@@ -160,19 +160,19 @@ fn sample_menu(ui: &mut egui::Ui, value: &mut RetouchSample) {
     ];
     let current = OPTIONS.iter().find(|(m, _)| m == value).map_or("", |(_, l)| *l);
     let r = egui::ComboBox::from_id_salt("retouch-sample")
-        .selected_text(current)
+        .selected_text(tr(current))
         .width(118.0)
         .show_ui(ui, |ui| {
             popup_style(ui);
             for (m, label) in OPTIONS {
-                ui.selectable_value(value, m, label);
+                ui.selectable_value(value, m, tr(label));
             }
         })
         .response;
     a11y_name(&r, "Sample");
-    r.on_hover_text(
+    r.on_hover_text(tr(
         "What the heal reads. Below or All lets you retouch on an empty layer and keep the photo untouched",
-    );
+    ));
 }
 
 /// A labelled mode control: segmented on a wide bar, a menu otherwise.
@@ -189,12 +189,12 @@ fn mode_control<T: PartialEq + Copy>(
     } else {
         let current = modes.iter().find(|(m, _)| m == value).map_or("", |(_, l)| *l);
         let r = egui::ComboBox::from_id_salt(id)
-            .selected_text(current)
+            .selected_text(tr(current))
             .width(92.0)
             .show_ui(ui, |ui| {
                 popup_style(ui);
                 for &(m, label) in modes {
-                    ui.selectable_value(value, m, label);
+                    ui.selectable_value(value, m, tr(label));
                 }
             })
             .response;
@@ -262,22 +262,33 @@ impl App {
             .chain(self.editor.history().iter().map(|s| s.to_string()))
             .collect();
         let mut pick = None;
-        ui.label(RichText::new("From").color(MUTED));
+        ui.label(RichText::new(tr("From")).color(MUTED));
         let r = egui::ComboBox::from_id_salt("history-source")
-            .selected_text(current)
+            .selected_text(tr(current))
             .width(140.0)
             .show_ui(ui, |ui| {
                 popup_style(ui);
                 let at = self.history_source_step();
                 for (i, label) in labels.iter().enumerate() {
-                    if ui.selectable_label(i == at, format!("{i} · {label}")).clicked() {
+                    if ui
+                        .selectable_label(
+                            i == at,
+                            tr_args(
+                                "{i} · {label}",
+                                &[("i", i.to_string()), ("label", label.to_string())],
+                            ),
+                        )
+                        .clicked()
+                    {
                         pick = Some(i);
                     }
                 }
             })
             .response;
         a11y_name(&r, "History brush source");
-        r.on_hover_text("The history state the brush paints back (also: right-click a History card)");
+        r.on_hover_text(tr(
+            "The history state the brush paints back (also: right-click a History card)",
+        ));
         if let Some(i) = pick {
             self.set_history_source(i);
         }
@@ -325,10 +336,10 @@ impl App {
                         if wide {
                             segmented(ui, dest, &[(false, "Source"), (true, "Destination")]);
                         } else {
-                            check(ui, dest, "Destination");
+                            check(ui, dest, tr("Destination"));
                         }
-                        check(ui, &mut self.retouch.patch_aware, "Content-Aware").on_hover_text(
-                            "Synthesise the patch from the dragged-to area (PatchMatch) instead of healing a copy of it",
+                        check(ui, &mut self.retouch.patch_aware, tr("Content-Aware")).on_hover_text(
+                            tr("Synthesise the patch from the dragged-to area (PatchMatch) instead of healing a copy of it"),
                         );
                         sample_menu(ui, &mut self.retouch.sample);
                         if wide {
@@ -337,18 +348,20 @@ impl App {
                             } else {
                                 "Draw around the flaw, then drag it onto clean texture"
                             };
-                            ui.label(RichText::new(hint).weak());
+                            ui.label(RichText::new(tr(hint)).weak());
                         }
                         true
                     }
                     HealMode::Move => {
-                        check(ui, &mut self.retouch.move_adapt, "Adapt").on_hover_text(
+                        check(ui, &mut self.retouch.move_adapt, tr("Adapt")).on_hover_text(tr(
                             "Heal the moved pixels into their new surroundings (tone follows the new place)",
-                        );
+                        ));
                         if wide {
                             ui.label(
-                                RichText::new("Draw around something, then drag it; the gap fills itself")
-                                    .weak(),
+                                RichText::new(tr(
+                                    "Draw around something, then drag it; the gap fills itself",
+                                ))
+                                .weak(),
                             );
                         }
                         true
@@ -361,7 +374,9 @@ impl App {
                             self.brush.radius = size / 2.0;
                         }
                         if wide {
-                            ui.label(RichText::new("Click a red pupil, or drag a box around the eye").weak());
+                            ui.label(
+                                RichText::new(tr("Click a red pupil, or drag a box around the eye")).weak(),
+                            );
                         }
                         true
                     }
@@ -369,15 +384,17 @@ impl App {
                         let (sample, aware) = (&mut self.retouch.sample, &mut self.retouch.spot_aware);
                         let mut options = |ui: &mut egui::Ui| {
                             sample_menu(ui, sample);
-                            check(ui, aware, "Content-Aware").on_hover_text(
+                            check(ui, aware, tr("Content-Aware")).on_hover_text(tr(
                                 "On release, rebuild the stroked area from its surroundings (PatchMatch); \
                                  off: blend the surrounding colour in",
-                            );
+                            ));
                         };
                         if tight {
                             // A tight bar folds them into a menu so the
                             // brush settings still fit.
-                            let r = ui.button("Options").on_hover_text("Sample and Content-Aware");
+                            let r = ui
+                                .button(tr("Options"))
+                                .on_hover_text(tr("Sample and Content-Aware"));
                             button_menu(&r, options);
                         } else {
                             options(ui);
@@ -416,14 +433,14 @@ impl App {
                                 &[(false, "Once"), (true, "Continuous")],
                             );
                         } else {
-                            check(ui, &mut self.retouch.bg_continuous, "Continuous").on_hover_text(
+                            check(ui, &mut self.retouch.bg_continuous, tr("Continuous")).on_hover_text(tr(
                                 "Resample the colour under every dab (off: once, at the start)",
-                            );
+                            ));
                         }
-                        check(ui, &mut self.retouch.bg_contiguous, "Contiguous")
-                            .on_hover_text("Erase only what connects to the brush centre");
-                        check(ui, &mut self.retouch.bg_protect, "Protect FG")
-                            .on_hover_text("Never erase colours close to the foreground colour");
+                        check(ui, &mut self.retouch.bg_contiguous, tr("Contiguous"))
+                            .on_hover_text(tr("Erase only what connects to the brush centre"));
+                        check(ui, &mut self.retouch.bg_protect, tr("Protect FG"))
+                            .on_hover_text(tr("Never erase colours close to the foreground colour"));
                         ui.separator();
                         false
                     }
@@ -432,16 +449,17 @@ impl App {
                         if slider(ui, "Tolerance", &mut tol, 0.0..=100.0, "%", false) {
                             self.tolerance = tol / 100.0;
                         }
-                        check(ui, &mut self.contiguous, "Contiguous")
-                            .on_hover_text("Erase only the connected area of similar colour");
-                        check(ui, &mut self.sample_merged, "All layers")
-                            .on_hover_text("Judge colours on the merged image instead of the active layer");
+                        check(ui, &mut self.contiguous, tr("Contiguous"))
+                            .on_hover_text(tr("Erase only the connected area of similar colour"));
+                        check(ui, &mut self.sample_merged, tr("All layers")).on_hover_text(tr(
+                            "Judge colours on the merged image instead of the active layer",
+                        ));
                         let mut op = self.brush.color[3] * 100.0;
                         if slider(ui, "Opacity", &mut op, 1.0..=100.0, "%", false) {
                             self.brush.color[3] = op / 100.0;
                         }
                         if wide {
-                            ui.label(RichText::new("Click a colour to erase it").weak());
+                            ui.label(RichText::new(tr("Click a colour to erase it")).weak());
                         }
                         true
                     }

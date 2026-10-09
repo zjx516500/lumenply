@@ -188,6 +188,8 @@ pub(crate) fn chord_label(ctx: &egui::Context, prefs: &Prefs, id: &str) -> Strin
 #[derive(Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
 pub(crate) struct Prefs {
+    /// Interface language; old preferences keep the English default.
+    pub language: crate::i18n::Language,
     /// Canvas surround colour (sRGB bytes).
     pub canvas_bg: [u8; 3],
     /// Undo history cap in steps.
@@ -295,6 +297,7 @@ impl Default for BrushPreset {
 impl Default for Prefs {
     fn default() -> Self {
         Prefs {
+            language: Default::default(),
             canvas_bg: [0x14, 0x16, 0x19], // theme::GROUND
             undo_steps: 100,
             undo_memory_mb: 1024,

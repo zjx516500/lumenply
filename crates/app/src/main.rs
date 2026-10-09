@@ -56,6 +56,7 @@ mod graph_view_tests;
 mod guides;
 mod histogram;
 mod history;
+mod i18n;
 mod image_size_ui;
 mod info_panel;
 mod layer_actions;
@@ -104,6 +105,7 @@ mod uitest;
 
 pub(crate) use canvas::*;
 pub(crate) use dialogs::Dialog;
+pub(crate) use i18n::{tr, tr_args};
 pub(crate) use palette::Palette;
 pub(crate) use theme::*;
 pub(crate) use tools::Tool;
@@ -177,11 +179,11 @@ impl App {
             p.text(
                 screen.center(),
                 Align2::CENTER_CENTER,
-                if self.no_doc {
+                tr(if self.no_doc {
                     "Drop to open"
                 } else {
                     "Drop to open — images are placed as a new layer"
-                },
+                }),
                 FontId::proportional(18.0),
                 TEXT,
             );
@@ -1543,14 +1545,16 @@ impl App {
                 if grip.double_clicked() {
                     ctx.data_mut(|d| d.remove::<f32>(split_id));
                 }
-                grip.on_hover_text("Drag to give Properties or Layers more room · double-click to reset")
-                    .widget_info(|| {
-                        egui::WidgetInfo::labeled(
-                            egui::WidgetType::Other,
-                            true,
-                            "Resize Properties and Layers",
-                        )
-                    });
+                grip.on_hover_text(tr(
+                    "Drag to give Properties or Layers more room · double-click to reset",
+                ))
+                .widget_info(|| {
+                    egui::WidgetInfo::labeled(
+                        egui::WidgetType::Other,
+                        true,
+                        tr("Resize Properties and Layers"),
+                    )
+                });
                 let top = ui.cursor().top();
                 self.quick_add_ui(ui);
                 let h = ui.cursor().top() - top;
@@ -1589,6 +1593,7 @@ impl eframe::App for App {
 impl App {
     /// One UI frame; `update` without the eframe window, so tests can run it.
     fn frame(&mut self, ctx: &egui::Context) {
+        let _language = self.prefs.language.enter();
         self.settle_status(ctx);
         if self.liquify.is_some() {
             self.liquify_ui(ctx);

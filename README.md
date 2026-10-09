@@ -66,6 +66,13 @@ Remove Background locally on your computer**. Your photos never leave your machi
 | **Fast** | A tiled, cached render graph: undo on a 6000 × 4000 document with 30 layers takes about 10 ms. |
 | **Free and open source** | GPL-3.0-or-later. No account, no telemetry, no subscription. |
 
+### Interface language
+
+Choose **Language → 简体中文** for the Chinese interface, or **语言 → English**
+to switch back. The change takes effect immediately and is remembered between
+launches. Chinese fonts are bundled for offline use on all supported platforms.
+
+
 ## Features
 
 ### Layers and non-destructive editing
@@ -254,4 +261,5 @@ edit is a `Command` with a test, and `cargo fmt`, `cargo clippy -- -D warnings` 
 [GPL-3.0-or-later](LICENSE). The demo photos are CC0 (credits in
 [crates/app/assets/NOTICE.md](crates/app/assets/NOTICE.md) and
 [docs/media/NOTICE.md](docs/media/NOTICE.md)); the bundled fonts are DejaVu Sans (Bitstream
-Vera licence) and IBM Plex (SIL Open Font License).
+Vera licence), IBM Plex and Noto Sans SC (SIL Open Font License;
+see [Chinese font credits](crates/app/assets/fonts/NOTICE.md)).

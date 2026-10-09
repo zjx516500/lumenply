@@ -784,10 +784,10 @@ impl App {
             Some(r) if r == original => "Original".to_string(),
             Some((a, b)) => format!("{}:{}", trim(a), trim(b)),
         };
-        ui.label(RichText::new("Ratio").color(MUTED));
+        ui.label(RichText::new(tr("Ratio")).color(MUTED));
         let mut pick = None;
         let r = egui::ComboBox::from_id_salt("crop-ratio")
-            .selected_text(label)
+            .selected_text(tr(label))
             .width(88.0)
             .show_ui(ui, |ui| {
                 popup_style(ui);
@@ -799,7 +799,7 @@ impl App {
             });
         a11y_name(&r.response, "Crop ratio");
         r.response
-            .on_hover_text("Keep the frame at a fixed width : height");
+            .on_hover_text(tr("Keep the frame at a fixed width : height"));
         if let Some(p) = pick {
             let ratio = match p {
                 Preset::Free => None,
@@ -822,7 +822,8 @@ impl App {
                 46.0,
             );
             a11y_name(&r, name);
-            r.on_hover_text(format!("{name} (empty = free)")).changed()
+            r.on_hover_text(tr_args("{name} (empty = free)", &[("name", tr(name))]))
+                .changed()
         };
         let ca = field(ui, &mut a, "Ratio width");
         let swap = swap_button(ui).clicked();
@@ -835,10 +836,10 @@ impl App {
             self.crop.fields = (a, b);
         }
         ui.separator();
-        check(ui, &mut self.crop.delete_cropped, "Delete cropped pixels").on_hover_text(
+        check(ui, &mut self.crop.delete_cropped, tr("Delete cropped pixels")).on_hover_text(tr(
             "On: pixels outside the frame are removed. Off: layers keep them beyond the \
              canvas edge, so a later canvas enlargement brings them back",
-        );
+        ));
         // Tight bars (with the Crop / Perspective switch) leave the size
         // to the on-canvas pill.
         if let (Some(f), false) = (self.crop.frame, tier == options_bar::Tier::Tight) {
@@ -848,29 +849,32 @@ impl App {
             if f.commit_angle() != 0.0 {
                 text.push_str(&format!("  {:+.1}°", f.angle.to_degrees()));
             }
-            ui.label(RichText::new(text).monospace().color(TEXT))
-                .on_hover_text("Size of the cropped canvas");
+            ui.label(RichText::new(tr(text)).monospace().color(TEXT))
+                .on_hover_text(tr("Size of the cropped canvas"));
             if tier != options_bar::Tier::Tight {
                 ui.label(
-                    RichText::new("Drag outside the frame to straighten · Shift keeps proportions").weak(),
+                    RichText::new(tr(
+                        "Drag outside the frame to straighten · Shift keeps proportions",
+                    ))
+                    .weak(),
                 );
             }
         }
         ui.separator();
         if ui
             .add(footer_button("Cancel").shortcut_text("Esc"))
-            .on_hover_text("Reset the frame to the whole canvas (Esc)")
+            .on_hover_text(tr("Reset the frame to the whole canvas (Esc)"))
             .clicked()
         {
             self.cancel_crop();
         }
         let r = ui.add(
             primary_button("Crop")
-                .shortcut_text(RichText::new("Enter").color(ACCENT_INK.gamma_multiply(0.7))),
+                .shortcut_text(RichText::new(tr("Enter")).color(ACCENT_INK.gamma_multiply(0.7))),
         );
         // Not just "Crop": the tool on the rail has that name.
         a11y_name(&r, "Crop to frame");
-        if r.on_hover_text("Crop to the frame (Enter)").clicked() {
+        if r.on_hover_text(tr("Crop to the frame (Enter)")).clicked() {
             self.commit_crop();
         }
     }
@@ -943,7 +947,9 @@ fn trim(v: f32) -> String {
 /// The small swap-sides button between the ratio fields.
 fn swap_button(ui: &mut egui::Ui) -> egui::Response {
     let (rect, resp) = ui.allocate_exact_size(egui::vec2(22.0, 22.0), Sense::click());
-    resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "Swap width and height"));
+    resp.widget_info(|| {
+        egui::WidgetInfo::labeled(egui::WidgetType::Button, true, tr("Swap width and height"))
+    });
     let ink = if resp.hovered() { TEXT } else { MUTED };
     if resp.hovered() {
         ui.painter().rect_filled(rect, 4.0, HOVER);
@@ -956,7 +962,7 @@ fn swap_button(ui: &mut egui::Ui) -> egui::Response {
     p.line_segment([c + egui::vec2(6.0, -2.5), c + egui::vec2(3.0, -5.5)], st);
     p.line_segment([c + egui::vec2(-6.0, 2.5), c + egui::vec2(6.0, 2.5)], st);
     p.line_segment([c + egui::vec2(-6.0, 2.5), c + egui::vec2(-3.0, 5.5)], st);
-    resp.on_hover_text("Swap width and height")
+    resp.on_hover_text(tr("Swap width and height"))
 }
 
 #[cfg(test)]

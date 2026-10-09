@@ -206,9 +206,9 @@ impl App {
                 egui::Layout::top_down(egui::Align::Center),
                 |ui| {
                     ui.add_space(12.0);
-                    ui.label(RichText::new("No layers yet").color(TEXT));
+                    ui.label(RichText::new(tr("No layers yet")).color(TEXT));
                     ui.label(
-                        RichText::new("Add one with + below, or drop an image onto the window.")
+                        RichText::new(tr("Add one with + below, or drop an image onto the window."))
                             .small()
                             .color(MUTED),
                     );
@@ -284,17 +284,17 @@ impl App {
                     );
                     let eye_name = format!("Show {}", row.name);
                     eye.widget_info(|| {
-                        egui::WidgetInfo::selected(egui::WidgetType::Checkbox, true, row.visible, &eye_name)
+                        egui::WidgetInfo::selected(egui::WidgetType::Checkbox, true, row.visible, tr(&eye_name))
                     });
                     if eye.hovered() || eye.has_focus() {
                         p.rect_filled(vis_rect.expand(3.0), 4.0, HOVER);
                     }
                     paint_eye(p, vis_rect, row.visible);
-                    let eye = eye.on_hover_text(if row.visible {
+                    let eye = eye.on_hover_text(tr(if row.visible {
                         "Hide layer (Alt-click: show only this layer)"
                     } else {
                         "Show layer (Alt-click: show only this layer)"
-                    });
+                    }));
                     if eye.clicked() {
                         if ui.input(|i| i.modifiers.alt) {
                             solo = Some(row.id);
@@ -522,7 +522,7 @@ impl App {
                         });
                     }
                     let resp = match tip {
-                        Some(t) => resp.on_hover_text(t),
+                        Some(t) => resp.on_hover_text(tr(t)),
                         None => resp,
                     };
                     context_menu(&resp, |ui| {
@@ -562,25 +562,25 @@ impl App {
                                 act(ui, true, kind.label(), "merge");
                             }
                             Err(why) => {
-                                act(ui, false, "Merge down", "merge").on_disabled_hover_text(why);
+                                act(ui, false, "Merge down", "merge").on_disabled_hover_text(tr(why));
                             }
                         }
                         menu_separator(ui);
                         act(ui, pos + 1 < count, "Move up", "up")
-                            .on_disabled_hover_text("Already at the top");
-                        act(ui, pos > 0, "Move down", "down").on_disabled_hover_text("Already at the bottom");
+                            .on_disabled_hover_text(tr("Already at the top"));
+                        act(ui, pos > 0, "Move down", "down").on_disabled_hover_text(tr("Already at the bottom"));
                         menu_separator(ui);
                         if row.clip {
                             act(ui, true, "Release clip", "unclip");
                         } else {
                             act(ui, pos > 0, "Clip to layer below", "clip")
-                                .on_disabled_hover_text("Nothing below to clip to");
+                                .on_disabled_hover_text(tr("Nothing below to clip to"));
                         }
                         if row.masked {
                             act(ui, true, "Delete mask", "rmmask");
                             let r = act(ui, apply_block.is_none(), "Apply mask", "applymask");
                             if let Some(why) = apply_block {
-                                r.on_disabled_hover_text(why);
+                                r.on_disabled_hover_text(tr(why));
                             }
                             if row.mask_enabled {
                                 act(ui, true, "Disable mask", "maskoff");
@@ -599,12 +599,12 @@ impl App {
                         }
                         if pixel {
                             act(ui, true, "Convert to smart object", "smart")
-                                .on_hover_text("Transforms re-render from the source: no quality loss");
+                                .on_hover_text(tr("Transforms re-render from the source: no quality loss"));
                         }
                         act(ui, pixel || smart, "Flip horizontal", "fliph")
-                            .on_disabled_hover_text("Flips apply to pixel layers and smart objects");
+                            .on_disabled_hover_text(tr("Flips apply to pixel layers and smart objects"));
                         act(ui, pixel || smart, "Flip vertical", "flipv")
-                            .on_disabled_hover_text("Flips apply to pixel layers and smart objects");
+                            .on_disabled_hover_text(tr("Flips apply to pixel layers and smart objects"));
                         menu_separator(ui);
                         act(ui, true, "Delete layer", "delete");
                     });
@@ -937,7 +937,7 @@ const CHIP_FONT: f32 = 10.5;
 /// Width of a kind chip for `label`, as [`kind_chip`] paints it.
 fn kind_chip_width(ui: &egui::Ui, label: &str) -> f32 {
     ui.fonts(|f| {
-        f.layout_no_wrap(label.into(), FontId::proportional(CHIP_FONT), MUTED)
+        f.layout_no_wrap(tr(label), FontId::proportional(CHIP_FONT), MUTED)
             .size()
             .x
     }) + 12.0
@@ -945,7 +945,7 @@ fn kind_chip_width(ui: &egui::Ui, label: &str) -> f32 {
 
 /// Paint a small kind chip whose right edge sits at `right`; returns its width.
 fn kind_chip(p: &egui::Painter, right: egui::Pos2, label: &str, ink: Color32) -> f32 {
-    let galley = p.layout_no_wrap(label.into(), FontId::proportional(CHIP_FONT), ink);
+    let galley = p.layout_no_wrap(tr(label), FontId::proportional(CHIP_FONT), ink);
     let size = galley.size() + egui::vec2(12.0, 6.0);
     let rect = egui::Rect::from_min_size(right - egui::vec2(size.x, size.y / 2.0), size);
     p.rect_filled(rect, 4.0, GROUND);
@@ -1002,12 +1002,12 @@ impl egui::Widget for IconButton {
         (self.draw)(ui.painter(), rect.shrink(5.0), ink);
         // Icon-only: the tooltip text doubles as the accessible name.
         let tip = self.tip;
-        resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, enabled, tip));
+        resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, enabled, tr(tip)));
         let off = match self.why {
             Some(why) => format!("{tip}: {why}"),
             None => tip.to_string(),
         };
-        resp.on_hover_text(tip).on_disabled_hover_text(off)
+        resp.on_hover_text(tr(tip)).on_disabled_hover_text(tr(off))
     }
 }
 

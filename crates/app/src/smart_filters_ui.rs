@@ -104,7 +104,7 @@ pub(crate) fn smart_filter_params(ui: &mut egui::Ui, f: &mut Filter) -> bool {
             finished |= slider_row_scaled(ui, "Amount", amount, 0.0..=5.0, 100.0, "%");
         }
         Filter::FindEdges => {
-            ui.label(RichText::new("No settings.").small().color(MUTED));
+            ui.label(RichText::new(tr("No settings.")).small().color(MUTED));
         }
         Filter::SurfaceBlur { radius, threshold } => {
             let o = RowOpts { log: true, ..int };
@@ -313,9 +313,11 @@ impl App {
             if is_smart {
                 section_title(ui, "SMART FILTERS");
                 ui.label(
-                    RichText::new("Filters from the Filter menu are added here and stay editable.")
-                        .small()
-                        .color(MUTED),
+                    RichText::new(tr(
+                        "Filters from the Filter menu are added here and stay editable.",
+                    ))
+                    .small()
+                    .color(MUTED),
                 );
             }
             return;
@@ -328,13 +330,13 @@ impl App {
 
         ui.horizontal(|ui| {
             let mut on = sf.enabled;
-            let r = check(ui, &mut on, "");
+            let r = check(ui, &mut on, tr(""));
             a11y_name(&r, "Show smart filters");
-            let r = r.on_hover_text(if sf.enabled {
+            let r = r.on_hover_text(tr(if sf.enabled {
                 "Hide every smart filter"
             } else {
                 "Show the smart filters"
-            });
+            }));
             if r.changed() {
                 act = Some(SfAct::Master(on));
             }
@@ -343,9 +345,12 @@ impl App {
                 if sf.mask.is_some() {
                     if ui
                         .add(
-                            egui::Button::new(RichText::new("Delete mask").small().color(MUTED)).frame(false),
+                            egui::Button::new(RichText::new(tr("Delete mask")).small().color(MUTED))
+                                .frame(false),
                         )
-                        .on_hover_text("Remove the filter mask: the filters cover the whole layer again")
+                        .on_hover_text(tr(
+                            "Remove the filter mask: the filters cover the whole layer again",
+                        ))
                         .clicked()
                     {
                         act = Some(SfAct::DeleteMask);
@@ -353,10 +358,10 @@ impl App {
                 } else if ui
                     .add_enabled(
                         has_sel,
-                        egui::Button::new(RichText::new("Mask").small().color(MUTED)).frame(false),
+                        egui::Button::new(RichText::new(tr("Mask")).small().color(MUTED)).frame(false),
                     )
-                    .on_hover_text("Limit the filters to the selection (a filter mask)")
-                    .on_disabled_hover_text("Make a selection to mask the filters")
+                    .on_hover_text(tr("Limit the filters to the selection (a filter mask)"))
+                    .on_disabled_hover_text(tr("Make a selection to mask the filters"))
                     .clicked()
                 {
                     act = Some(SfAct::MaskFromSelection);
@@ -369,7 +374,7 @@ impl App {
             let open = focus == Some(i);
             ui.horizontal(|ui| {
                 let mut on = f.enabled;
-                let r = check(ui, &mut on, "");
+                let r = check(ui, &mut on, tr(""));
                 a11y_name(&r, &format!("Show {}", f.filter.name()));
                 if r.changed() {
                     act = Some(SfAct::Toggle(i));
@@ -386,35 +391,38 @@ impl App {
                     f.filter.name().to_string()
                 };
                 let r = ui
-                    .add(egui::SelectableLabel::new(open, RichText::new(label).color(ink)))
-                    .on_hover_text(if open {
+                    .add(egui::SelectableLabel::new(
+                        open,
+                        RichText::new(tr(label)).color(ink),
+                    ))
+                    .on_hover_text(tr(if open {
                         "Close its settings"
                     } else {
                         "Edit its settings"
-                    });
+                    }));
                 if r.clicked() {
                     act = Some(SfAct::Focus((!open).then_some(i)));
                 }
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     ui.spacing_mut().item_spacing.x = 2.0;
-                    let small = |t: &str| egui::Button::new(RichText::new(t).color(MUTED)).frame(false);
-                    let r = ui.add(small("×")).on_hover_text("Delete this smart filter");
+                    let small = |t: &str| egui::Button::new(RichText::new(tr(t)).color(MUTED)).frame(false);
+                    let r = ui.add(small("×")).on_hover_text(tr("Delete this smart filter"));
                     a11y_name(&r, &format!("Delete {}", f.filter.name()));
                     if r.clicked() {
                         act = Some(SfAct::Delete(i));
                     }
                     let r = ui
                         .add_enabled(i > 0, small("↓"))
-                        .on_hover_text("Apply it earlier")
-                        .on_disabled_hover_text("Already applied first");
+                        .on_hover_text(tr("Apply it earlier"))
+                        .on_disabled_hover_text(tr("Already applied first"));
                     a11y_name(&r, &format!("Move {} down", f.filter.name()));
                     if r.clicked() {
                         act = Some(SfAct::Down(i));
                     }
                     let r = ui
                         .add_enabled(i + 1 < n, small("↑"))
-                        .on_hover_text("Apply it later")
-                        .on_disabled_hover_text("Already applied last");
+                        .on_hover_text(tr("Apply it later"))
+                        .on_disabled_hover_text(tr("Already applied last"));
                     a11y_name(&r, &format!("Move {} up", f.filter.name()));
                     if r.clicked() {
                         act = Some(SfAct::Up(i));
@@ -434,11 +442,11 @@ impl App {
                         ui.spacing_mut().combo_width = ui.available_width();
                         let mut mode = edit.blend;
                         let r = egui::ComboBox::from_id_salt(("smart-filter-blend", id, i))
-                            .selected_text(blend_title(mode))
+                            .selected_text(tr(blend_title(mode)))
                             .show_ui(ui, |ui| {
                                 popup_style(ui);
                                 for m in BlendMode::ALL {
-                                    ui.selectable_value(&mut mode, m, blend_title(m));
+                                    ui.selectable_value(&mut mode, m, tr(blend_title(m)));
                                 }
                             });
                         a11y_name(&r.response, "Smart filter blend mode");
@@ -455,9 +463,11 @@ impl App {
         }
         if sf.mask.is_some() {
             ui.label(
-                RichText::new("A filter mask limits the filters to the selection it came from.")
-                    .small()
-                    .color(MUTED),
+                RichText::new(tr(
+                    "A filter mask limits the filters to the selection it came from.",
+                ))
+                .small()
+                .color(MUTED),
             );
         }
         if let Some(a) = act {
@@ -501,7 +511,10 @@ impl App {
                 egui::WidgetType::Checkbox,
                 true,
                 sf.enabled,
-                format!("Smart filters of {layer_name}"),
+                tr_args(
+                    "Smart filters of {layer_name}",
+                    &[("layer_name", layer_name.to_string())],
+                ),
             )
         });
         let p = ui.painter();
@@ -529,14 +542,14 @@ impl App {
         p.text(
             egui::pos2(x, cy),
             Align2::LEFT_CENTER,
-            "Smart Filters",
+            tr("Smart Filters"),
             FontId::proportional(12.5),
             if sf.enabled { MUTED } else { DISABLED_SUB },
         );
         let on_eye = resp
             .interact_pointer_pos()
             .is_some_and(|q| eye.expand(3.0).contains(q));
-        let resp = resp.on_hover_text(if hover.is_some_and(|q| eye.expand(3.0).contains(q)) {
+        let resp = resp.on_hover_text(tr(if hover.is_some_and(|q| eye.expand(3.0).contains(q)) {
             if sf.enabled {
                 "Hide the smart filters"
             } else {
@@ -544,7 +557,7 @@ impl App {
             }
         } else {
             "Smart filters: non-destructive, on this layer only"
-        });
+        }));
         if resp.clicked() {
             act = Some(if on_eye {
                 SfAct::Master(!sf.enabled)
